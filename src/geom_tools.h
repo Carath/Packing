@@ -1,27 +1,26 @@
 #ifndef GEOM_TOOLS_H
 #define GEOM_TOOLS_H
 
+#include <stdbool.h>
 #include "settings.h"
 
 typedef struct
 {
-	double X;
-	double Y;
+	double x, y;
 } Point;
 
 typedef struct
 {
-	Point *Start;
-	Point *End;
+	Point *start, *end;
 } Segment;
 
 // Line of equation: ax + by + c = 0:
 typedef struct
 {
-	double a;
-	double b;
-	double c;
+	double a, b, c;
 } Line;
+
+// TODO: inline short functions
 
 /////////////////////////////////////////////
 // Utilities:
@@ -48,6 +47,11 @@ int pointEquality(const Point *A, const Point *B);
 
 // Euclidean distance between the Points A and B:
 double distance(const Point *A, const Point *B);
+
+// Euclidean distance squared.
+double distance2(double x1, double y1, double x2, double y2);
+
+double determinant(double x1, double y1, double x2, double y2);
 
 /////////////////////////////////////////////
 // Segments:
@@ -90,7 +94,10 @@ int isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, con
 
 // Checks the position of a points versus a segment.
 // Returns -2 if the point isn't on the segment's line, -1 if it is before the start,
-// 1 if it is after the end, and 0 if the point is on the segment.
-int posPointSegment(const Point *A, const Segment *segment);
+// 1 if it is after the end, and 0 if the point is inside the segment.
+int pointInsideSegment(const Point *A, const Segment *segment);
+
+// Returns true if there is a non trivial intersection.
+bool segmentsIntersection(const Segment *segments_1, const Segment *segments_2);
 
 #endif

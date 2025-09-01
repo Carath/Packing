@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "settings.h"
+#include "geom_tools.h"
 #include "rng32.h"
 
 typedef enum {POS = 1, NEG = -1} Direction;

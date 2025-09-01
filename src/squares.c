@@ -6,7 +6,6 @@
 
 // static const double twoPi = 6.28318530718;
 
-inline double distance2(double x1, double y1, double x2, double y2);
 inline void replace4Rot(double *x, double *y, double xCenter, double yCenter, double co, double si);
 
 Square createSquare(double xA, double yA, double xB, double yB, Direction d)
@@ -22,11 +21,6 @@ Square createSquare(double xA, double yA, double xB, double yB, Direction d)
 	s.xCenter = (s.xA + s.xC) / 2.;
 	s.yCenter = (s.yA + s.yC) / 2.;
 	return s;
-}
-
-inline double distance2(double x1, double y1, double x2, double y2)
-{
-	return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
 }
 
 void printSquare(const Square *s)
@@ -131,6 +125,23 @@ bool intersects(const Square *s1, const Square *s2)
 	if (distance2(s1->xCenter, s1->yCenter, s2->xCenter, s2->yCenter) >= 8.)
 		return false;
 
-	// TODO: 16 pairwise segments intersections.
+	const Point points_1[4] = {
+		(Point) {s1->xA, s1->yA}, (Point) {s1->xB, s1->yB},
+		(Point) {s1->xC, s1->yC}, (Point) {s1->xD, s1->yD}
+	};
+	const Point points_2[4] = {
+		(Point) {s2->xA, s2->yA}, (Point) {s2->xB, s2->yB},
+		(Point) {s2->xC, s2->yC}, (Point) {s2->xD, s2->yD}
+	};
+	const Segment segments_1[4] = {&(points_1[0]), &(points_1[1]), &(points_1[2]), &(points_1[3])};
+	const Segment segments_2[4] = {&(points_2[0]), &(points_2[1]), &(points_2[2]), &(points_2[3])};
+
+	// 16 pairwise segments intersections.
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			if (segmentsIntersection(segments_1 + i, segments_2 + j))
+				return true;
+		}
+	}
 	return false;
 }

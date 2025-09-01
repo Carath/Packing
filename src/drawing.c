@@ -20,8 +20,8 @@ void drawPoint(const Point *point, const SDL_Color *color)
 		printf("Cannot draw a NULL Point.\n");
 		return;
 	}
-	SDLA_SetDrawColor(color -> r, color -> g, color -> b);
-	SDL_Rect rect = {point -> X - POINT_SIZE / 2, point -> Y - POINT_SIZE / 2, POINT_SIZE, POINT_SIZE};
+	SDLA_SetDrawColor(color->r, color->g, color->b);
+	SDL_Rect rect = {point->x - POINT_SIZE / 2, point->y - POINT_SIZE / 2, POINT_SIZE, POINT_SIZE};
 	SDL_RenderFillRect(renderer, &rect);
 }
 
@@ -29,14 +29,14 @@ void drawSegment(const Segment *segment, const SDL_Color *color)
 {
 	if (!segment)
 		return;
-	else if (!(segment -> Start) && !(segment -> End)) {
+	else if (!(segment->start) && !(segment->end)) {
 		printf("Cannot draw: Segment's start and end are NULL.\n");
 		return;
 	}
 	else {
-		SDLA_SetDrawColor(color -> r, color -> g, color -> b);
-		SDL_RenderDrawLine(renderer, (segment -> Start) -> X, (segment -> Start) -> Y,
-			(segment -> End) -> X, (segment -> End) -> Y);
+		SDLA_SetDrawColor(color->r, color->g, color->b);
+		SDL_RenderDrawLine(renderer, (segment->start)->x, (segment->start)->y,
+			(segment->end)->x, (segment->end)->y);
 	}
 }
 
