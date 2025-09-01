@@ -52,7 +52,7 @@ DEP := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.d)
 # Compilation rules:
 
 # The following names are not associated with files:
-.PHONY: all clean
+.PHONY: all clean zip zip-git
 
 # All executables to be created:
 all: $(EXE)
@@ -70,3 +70,9 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 # Cleaning with 'make clean' the object files:
 clean:
 	rm -fv $(EXE) $(OBJ_DIR)/*.o $(OBJ_DIR)/*.d
+
+zip:
+	make clean && zip -qr $(EXE_NAME).zip .
+
+zip-git:
+	zip -qr $(EXE_NAME)-git.zip .git
