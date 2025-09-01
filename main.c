@@ -20,8 +20,7 @@ Square createSquare(double xA, double yA, double xB, double yB, bool direc);
 inline double distance2(double x1, double y1, double x2, double y2);
 void printSquare(const Square *s);
 void translation(Square *s, double xDelta, double yDelta);
-inline void replace(double *x1, double *y1, double x2, double y2);
-inline void replace4Rot(double *x, double *y, double co, double si);
+inline void replace4Rot(double *x, double *y, double xCenter, double yCenter, double co, double si);
 void rotation(Square *s, double angle);
 inline float randomFloat(void);
 void mutation(Square *s);
@@ -79,30 +78,22 @@ void translation(Square *s, double xDelta, double yDelta)
 }
 
 // Useful to update two variables while preventing side effects!
-inline void replace(double *x1, double *y1, double x2, double y2)
+inline void replace4Rot(double *x, double *y, double xCenter, double yCenter, double co, double si)
 {
-	*x1 = x2, *y1 = y2;
-}
-
-inline void replace4Rot(double *x, double *y, double co, double si)
-{
-	const double xNew = co * *x - si * *y;
-	const double yNew = si * *x + co * *y;
-	*x = xNew, *y = yNew;
+	const double xDelta = *x - xCenter, yDelta = *y - yCenter;
+	*x = co * xDelta - si * yDelta + xCenter;
+	*y = si * xDelta + co * yDelta + yCenter;
 }
 
 // Rotation center is square center.
 void rotation(Square *s, double angle)
 {
+
 	const double co = cos(angle), si = sin(angle);
-	replace4Rot(&(s->xA), &(s->yA), co, si);
-	replace4Rot(&(s->xB), &(s->yB), co, si);
-	replace4Rot(&(s->xC), &(s->yC), co, si);
-	replace4Rot(&(s->xD), &(s->yD), co, si);
-	// replace(&(s->xA), &(s->yA), co * s->xA - si * s->yA, si * s->xA + co * s->yA);
-	// replace(&(s->xB), &(s->yB), co * s->xB - si * s->yB, si * s->xB + co * s->yB);
-	// replace(&(s->xC), &(s->yC), co * s->xC - si * s->yC, si * s->xC + co * s->yC);
-	// replace(&(s->xD), &(s->yD), co * s->xD - si * s->yD, si * s->xD + co * s->yD);
+	replace4Rot(&(s->xA), &(s->yA), s->xCenter, s->yCenter, co, si);
+	replace4Rot(&(s->xB), &(s->yB), s->xCenter, s->yCenter, co, si);
+	replace4Rot(&(s->xC), &(s->yC), s->xCenter, s->yCenter, co, si);
+	replace4Rot(&(s->xD), &(s->yD), s->xCenter, s->yCenter, co, si);
 }
 
 // Values between 0. and 1.
