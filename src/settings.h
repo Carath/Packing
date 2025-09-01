@@ -3,17 +3,20 @@
 
 // Squares functions settings:
 #define EPSILON        ((double) 1e-6)
-#define INIT_MARGIN    ((double) 0.25)
-#define ROTATION_PROBA ((float) 0.05f)
+#define INIT_MARGIN    ((double) 0.50)
+#define ROTATION_PROBA ((float) 0.15f)
 #define STEP_SIZE      ((float) 0.05f)
+// Those work well with n_squares = 5
 
 // Graphic settings:
 #define WINDOW_WIDTH (1200)
 #define WINDOW_HEIGHT (800)
 #define POINT_SIZE      (8)
-#define DRAW_OFFSET  (200.)
 #define DRAW_SCALE   (100.)
+#define FONT_SIZE      (25)
 #define QUIT_KEY_1 (SDLK_ESCAPE)
 #define QUIT_KEY_2 (SDLK_q)
+
+#define FONT_NAME ("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf")
 
 #endif

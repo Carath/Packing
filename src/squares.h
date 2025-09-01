@@ -23,6 +23,7 @@ typedef struct
 {
 	Square *sqArray;
 	const int n_squares;
+	double bigSquareSide;
 	double error;
 } Solution;
 
@@ -32,7 +33,8 @@ void translation(Square *s, double xDelta, double yDelta);
 void rotation(Square *s, double angle);
 void mutation(rng32 *rng, Square *s);
 Box findBoundary(const Square *sqArray, int n_squares);
-double findErrorRatio(const Square *sqArray, int n_squares);
+double findBigSquareSize(const Square *sqArray, int n_squares);
+void findErrorRatio(const Square *sqArray, int n_squares, double *side, double *error);
 bool intersects(const Square *s1, const Square *s2);
 bool checkConfiguration(const Square *sqArray, int n_squares);
 

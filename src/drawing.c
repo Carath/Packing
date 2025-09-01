@@ -6,12 +6,13 @@
 extern SDL_Window *window;
 extern SDL_Renderer *renderer;
 static SDL_Event event = {0};
-const SDL_Color Lime = {0, 255, 0, 255};
-const SDL_Color Yellow = {255, 255, 0, 255};
+SDL_Color Lime = {0, 255, 0, 255};
+SDL_Color Yellow = {255, 255, 0, 255};
+// SDL colors cannot be const due to an SDLA limitation.
 
-Point pointFromCoord(double x, double y)
+Point pointFromCoord(double xOffset, double yOffset, double x, double y)
 {
-	return (Point) {DRAW_OFFSET + DRAW_SCALE * x, DRAW_OFFSET + DRAW_SCALE * y};
+	return (Point) { DRAW_SCALE * (x + xOffset), DRAW_SCALE * (y + yOffset)};
 }
 
 void drawPoint(const Point *point, const SDL_Color *color)
@@ -43,16 +44,19 @@ void drawSegment(const Segment *segment, const SDL_Color *color)
 void animation(Solution sol)
 {
 	SDLA_Init(&window, &renderer, "Squares", WINDOW_WIDTH, WINDOW_HEIGHT, 0, SDLA_BLENDED);
-	// const Box b = findBoundary(sol.sqArray, sol.n_squares)
-	// TODO: center the squares using b.
-
+	TTF_Font *font = TTF_OpenFont(FONT_NAME, FONT_SIZE);
 	while (1) {
 		SDLA_ClearWindow(NULL);
+
+		// 'sol' could be updated here...
+		const Box box = findBoundary(sol.sqArray, sol.n_squares);
+		const double xOffset = (WINDOW_WIDTH  / DRAW_SCALE - (box.xmax - box.xmin)) / 2. - box.xmin;
+		const double yOffset = (WINDOW_HEIGHT / DRAW_SCALE - (box.ymax - box.ymin)) / 2. - box.ymin;
 		for (int i = 0; i < sol.n_squares; ++i) {
-			Point A = pointFromCoord(sol.sqArray[i].xA, sol.sqArray[i].yA);
-			Point B = pointFromCoord(sol.sqArray[i].xB, sol.sqArray[i].yB);
-			Point C = pointFromCoord(sol.sqArray[i].xC, sol.sqArray[i].yC);
-			Point D = pointFromCoord(sol.sqArray[i].xD, sol.sqArray[i].yD);
+			Point A = pointFromCoord(xOffset, yOffset, sol.sqArray[i].xA, sol.sqArray[i].yA);
+			Point B = pointFromCoord(xOffset, yOffset, sol.sqArray[i].xB, sol.sqArray[i].yB);
+			Point C = pointFromCoord(xOffset, yOffset, sol.sqArray[i].xC, sol.sqArray[i].yC);
+			Point D = pointFromCoord(xOffset, yOffset, sol.sqArray[i].xD, sol.sqArray[i].yD);
 			drawSegment(&(Segment) {&A, &B}, &Yellow);
 			drawSegment(&(Segment) {&B, &C}, &Yellow);
 			drawSegment(&(Segment) {&C, &D}, &Yellow);
@@ -61,7 +65,14 @@ void animation(Solution sol)
 			drawPoint(&B, &Lime);
 			drawPoint(&C, &Lime);
 			drawPoint(&D, &Lime);
-		} // TODO: draw error ratio.
+		}
+		if (font) {
+			char bufferStr[100] = {0};
+			sprintf(bufferStr, "Error ratio: %.4f", sol.error);
+			SDLA_SlowDrawText(font, &Yellow, 50, 50, bufferStr);
+			sprintf(bufferStr, "Big square size: %.4f", sol.bigSquareSide);
+			SDLA_SlowDrawText(font, &Yellow, 50, 100, bufferStr);
+		}
 
 		SDL_RenderPresent(renderer);
 		SDL_WaitEvent(&event);
@@ -70,5 +81,6 @@ void animation(Solution sol)
 			(event.type == SDL_KEYDOWN && event.key.keysym.sym == QUIT_KEY_2))
 			break;
 	}
+	TTF_CloseFont(font);
 	SDLA_Quit();
 }

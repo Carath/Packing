@@ -71,10 +71,10 @@ void mutation(rng32 *rng, Square *s)
 {
 	// Rotations are rarely done. Optimization: only apply the
 	// rotation when the picked random value is small enough.
-
-	// const float angle = rng32_nextFloat(rng);
-	// if (angle < ROTATION_PROBA)
-	// 	rotation(s, angle - ROTATION_PROBA/2.); // angle between -ROTATION_PROBA/2. and ROTATION_PROBA/2.
+	const float angle = rng32_nextFloat(rng);
+	if (angle < ROTATION_PROBA)
+		rotation(s, angle - ROTATION_PROBA/2.); // angle between -ROTATION_PROBA/2. and ROTATION_PROBA/2.
+	// TODO: add a more complexe rotation scheme?
 
 	translation(s, STEP_SIZE * rng32_nextFloat(rng), STEP_SIZE * rng32_nextFloat(rng));
 }
@@ -106,15 +106,19 @@ Box findBoundary(const Square *sqArray, int n_squares)
 	return (Box) {xmin, xmax, ymin, ymax};
 }
 
+inline double findBigSquareSize(const Square *sqArray, int n_squares)
+{
+	const Box b = findBoundary(sqArray, n_squares);
+	return fmax(b.xmax - b.xmin, b.ymax - b.ymin);
+}
+
 // Only pertinent when the squares do not intersect non trivially,
 // this should be verified with checkConfiguration() beforehand.
-double findErrorRatio(const Square *sqArray, int n_squares)
+void findErrorRatio(const Square *sqArray, int n_squares, double *side, double *error)
 {
-	// assert(checkConfiguration(sqArray, n_squares));
-	const Box b = findBoundary(sqArray, n_squares);
-	const double side = fmax(b.xmax - b.xmin, b.ymax - b.ymin);
-	return side * side / n_squares - 1.;
-	// return 1. - n_squares / (side * side);
+	*side = findBigSquareSize(sqArray, n_squares);
+	*error = *side * *side / n_squares - 1.;
+	// *error = 1. - n_squares / (*side * *side);
 }
 
 bool checkConfiguration(const Square *sqArray, int n_squares)

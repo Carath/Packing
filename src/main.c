@@ -23,12 +23,14 @@ int main(int argc, char const *argv[])
 	rng32_init(&rng, seed, 0);
 
 	const int n_squares = 5;
-	const int iterationNumber = 100000;
+	// const int iterationNumber = 1000;
+	const int iterationNumber = 1000000;
 
 	Solution sol = init(n_squares, &rng);
-	printf("Init error ratio: %.3f\n", sol.error);
+	printf("Init error ratio: %.4f\n", sol.error);
 	optimize(&sol, &rng, iterationNumber);
-	printf("Best error: %.3f\n\n", sol.error);
+	printf("Best error ratio: %f\n", sol.error);
+	printf("Best big square side: %f\n\n", sol.bigSquareSide);
 
 	animation(sol);
 
@@ -48,14 +50,14 @@ Solution init(int n_squares, rng32 *rng)
 		sqArray[k] = createSquare(x, y, x + cos(theta), y + sin(theta), POS);
 		// printSquare(sqArray + k);
 	}
-	const double error = findErrorRatio(sqArray, n_squares);
-	return (Solution) {sqArray, n_squares, error};
+	double side = 0, error = 0;
+	findErrorRatio(sqArray, n_squares, &side, &error);
+	return (Solution) {sqArray, n_squares, side, error};
 }
 
 void optimize(Solution *sol, rng32 *rng, int iterationNumber)
 {
 	const int n_squares = sol->n_squares;
-	double best_error = sol->error;
 	Square *sqArray = sol->sqArray;
 	Square *best_sqArray = (Square*) calloc(n_squares, sizeof(Square));
 	memcpy(best_sqArray, sqArray, n_squares * sizeof(Square));
@@ -66,17 +68,21 @@ void optimize(Solution *sol, rng32 *rng, int iterationNumber)
 			mutation(rng, sqArray + idx);
 		}
 		if (checkConfiguration(sqArray, n_squares)) {
-			const double err = findErrorRatio(sqArray, n_squares);
-			if (err < best_error) { // greedy
-				best_error = err;
+			double side = 0, error = 0;
+			findErrorRatio(sqArray, n_squares, &side, &error);
+			if (error < sol->error) { // greedy
+				sol->bigSquareSide = side;
+				sol->error = error;
 				memcpy(best_sqArray, sqArray, n_squares * sizeof(Square));
-				printf("Improvement at iteration %d: %.3f\n", i, best_error);
+				printf("Improvement at iteration %d: %.4f\n", i, sol->error);
 			}
 		}
 		else // backtracking
 			memcpy(sqArray, best_sqArray, n_squares * sizeof(Square));
 	}
-	// memcpy(sqArray, best_sqArray, n_squares * sizeof(Square)); // useless now
-	sol->error = best_error;
 	free(best_sqArray);
 }
+
+// TODO:
+// - add local exploration of several mutations, and take the best?
+// - save good quality configurations.

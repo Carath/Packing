@@ -297,3 +297,4 @@ bool segmentsIntersection(const Segment *segments_1, const Segment *segments_2)
 	free(l2);
 	return result;
 }
+// TODO: optimize this function?
