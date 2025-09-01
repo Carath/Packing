@@ -14,11 +14,13 @@ typedef struct
 	const Point *start, *end;
 } Segment;
 
-// Line of equation: ax + by + c = 0:
 typedef struct
 {
 	double a, b, c;
 } Line;
+// Line of equation: ax + by + c = 0.
+// N.B: a Line could also be represented by a reference Point, and a vector
+// encoded by another Point. Maybe this yields to less computations...
 
 typedef struct
 {
@@ -48,18 +50,23 @@ void printPoint(const Point *point);
 // Checks if the two given points are equal:
 bool pointEquality(const Point *A, const Point *B);
 
+// Returns the AB vector, stored as a Point.
+Point vector(const Point *A, const Point *B);
+
 double determinant(double x1, double y1, double x2, double y2);
 
 double scalarProduct(double x1, double y1, double x2, double y2);
 
 // Euclidean distance squared.
-double distance2(double x1, double y1, double x2, double y2);
+double distance2(const Point *A, const Point *B);
 
 // Euclidean distance between the Points A and B:
 double distance(const Point *A, const Point *B);
 
+double detFromPoints(const Point *A, const Point *B);
+
 // 'co' and 'si' are the precomputed cosinus and sinus of the desired rotation's angle.
-Point rotatePoint(const Point center, Point p, double co, double si);
+Point rotatePoint(const Point center, Point A, double co, double si);
 
 /////////////////////////////////////////////
 // Segments:
@@ -81,21 +88,22 @@ Line lineFromPoints(const Point *A, const Point *B);
 // More 'advanced' geometric utilities:
 /////////////////////////////////////////////
 
-// Returns true if the two lines intersect, and if so fills the point.
+// Returns true if the two lines intersect in a single point, and if so fills it.
 bool linesIntersection(const Line *line1, const Line *line2, Point *p);
 
-// Checks if the given point is in the half plane defined by a line and another point:
-bool isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, const Line *line);
+// Checks if the given point is in the half plane defined by a line and a reference
+// point inside said half plane. If strict is true, the point must not be on the line.
+bool isPointInHalfPlane(const Point *point_test, const Point *point_ref, const Line *line, bool strict);
 
-// Checks the position of a points versus a segment.
-// Returns -2 if the point isn't on the segment's line, -1 if it is before the start,
-// 1 if it is after the end, and 0 if the point is inside the segment.
-bool pointInsideSegment(const Point *A, const Segment *segment);
+// Checks if the given point is in the segment. If strict
+// is true, the point must not be on the segment bounds.
+bool isPointInSegment(const Point *A, const Segment *segment, bool strict);
 
 /////////////////////////////////////////////
 
-// Returns true if there is a non trivial intersection.
-bool segmentsNonTrivialIntersection(const Segment *segment_1, const Segment *segment_2);
+// Returns true if the segments intersect in a point, and if so fills it.
+// If strict is true, the intersection must not be on any segment bounds.
+bool segmentsIntersection(const Segment *segment1, const Segment *segment2, bool strict, Point *p);
 
 /////////////////////////////////////////////
 
@@ -106,6 +114,6 @@ bool isInPolygon(const Point *p, const Point polygonPoints[N_SIDES], const Line 
 
 bool isPointInArray(const Point *p, const Point *array, int length);
 
-double intersectionArea2(const Polygon *pol1, const Polygon *pol2);
+double intersectionArea(const Polygon *pol1, const Polygon *pol2);
 
 #endif

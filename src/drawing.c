@@ -51,7 +51,7 @@ void drawPolygon(const Polygon *polygon)
 
 void animation(Solution sol)
 {
-	SDLA_Init(&window, &renderer, "Packing", WINDOW_WIDTH, WINDOW_HEIGHT, 0, SDLA_BLENDED);
+	SDLA_Init(&window, &renderer, "Polygons packing", WINDOW_WIDTH, WINDOW_HEIGHT, 0, SDLA_BLENDED);
 	TTF_Font *font = TTF_OpenFont(FONT_NAME, FONT_SIZE);
 	while (1) {
 		SDLA_ClearWindow(NULL);

@@ -37,10 +37,16 @@ void printPoint(const Point *point)
 }
 
 // Checks if the two given points are equal:
-bool pointEquality(const Point *A, const Point *B)
+inline bool pointEquality(const Point *A, const Point *B)
 {
 	// assert(A && B);
 	return epsilonEquality(A->x, B->x) && epsilonEquality(A->y, B->y);
+}
+
+// Returns the AB vector, stored as a Point.
+inline Point vector(const Point *A, const Point *B)
+{
+	return (Point) {B->x - A->x, B->y - A->y};
 }
 
 inline double determinant(double x1, double y1, double x2, double y2)
@@ -54,34 +60,32 @@ inline double scalarProduct(double x1, double y1, double x2, double y2)
 }
 
 // Euclidean distance squared.
-inline double distance2(double x1, double y1, double x2, double y2)
+inline double distance2(const Point *A, const Point *B)
 {
-	return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
-	// return scalarProduct(x2 - x1, y2 - y1, x2 - x1, y2 - y1);
+	// assert(A && B);
+	const Point AB = vector(A, B);
+	return AB.x * AB.x + AB.y * AB.y;
 }
 
 // Euclidean distance between the Points A and B:
 inline double distance(const Point *A, const Point *B)
 {
-	// assert(A && B);
-	return sqrt(distance2(A->x, A->y, B->x, B->y));
-	// return hypot(B->x - A->x, B->y - A->y);
+	return sqrt(distance2(A, B));
+	// return hypot(B->x - A->x, B->y - A->y); // a bit slower but more precise.
 }
 
-// inline double detFromPoints(const Point *A, const Point *B)
-// {
-// 	return A->x * B->y - A->y * B->x;
-// 	// return determinant(A->x, A->y, B->x, B->y);
-// }
+inline double detFromPoints(const Point *A, const Point *B)
+{
+	return A->x * B->y - A->y * B->x;
+}
 
 // 'co' and 'si' are the precomputed cosinus and sinus of the desired rotation's angle.
-Point rotatePoint(const Point center, Point p, double co, double si)
+Point rotatePoint(const Point center, Point A, double co, double si)
 {
-	const double xDelta = p.x - center.x;
-	const double yDelta = p.y - center.y;
-	p.x = co * xDelta - si * yDelta + center.x;
-	p.y = si * xDelta + co * yDelta + center.y;
-	return p;
+	const Point CA = vector(&center, &A);
+	A.x = co * CA.x - si * CA.y + center.x;
+	A.y = si * CA.x + co * CA.y + center.y;
+	return A;
 }
 
 /////////////////////////////////////////////
@@ -114,14 +118,16 @@ void printLine(const Line *line)
 Line lineFromPoints(const Point *A, const Point *B)
 {
 	// assert(A && B);
-	return (Line) {B->y - A->y, A->x - B->x, determinant(B->x, B->y, A->x, A->y)};
+	return (Line) {B->y - A->y, A->x - B->x, detFromPoints(B, A)};
+	// const Point AB = vector(A, B);
+	// return (Line) {-AB.y, AB.x, detFromPoints(A, B)};
 }
 
 /////////////////////////////////////////////
 // More 'advanced' geometric utilities:
 /////////////////////////////////////////////
 
-// Returns the intersection of the two lines if it exists, NULL otherwise:
+// Returns true if the two lines intersect in a single point, and if so fills it.
 bool linesIntersection(const Line *line1, const Line *line2, Point *p)
 {
 	// assert(line1 && line2);
@@ -139,65 +145,58 @@ bool linesIntersection(const Line *line1, const Line *line2, Point *p)
 	return true;
 }
 
-// Checks if the given point is in the half plane defined by a line and another point:
-bool isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, const Line *line)
+// Checks if the given point is in the half plane defined by a line and a reference
+// point inside said half plane. If strict is true, the point must not be on the line.
+bool isPointInHalfPlane(const Point *point_test, const Point *point_ref, const Line *line, bool strict)
 {
 	// assert(point_test && point_ref && line);
 	const int sign = line->a * point_ref->x + line->b * point_ref->y + line->c >= 0. ? 1 : -1;
-	return sign * (line->a * point_test->x + line->b * point_test->y + line->c) >= 0.;
-	// const int sign = scalarProduct(line->a, line->b, point_ref->x, point_ref->y) + line->c >= 0. ? 1 : -1;
-	// return sign * (scalarProduct(line->a, line->b, point_test->x, point_test->y) + line->c) >= 0.;
+	return sign * (line->a * point_test->x + line->b * point_test->y + line->c) >= (strict ? EPSILON : 0.);
 }
 
-// Checks the position of a points versus a segment.
-// Returns -2 if the point isn't on the segment's line, -1 if it is before the start,
-// 1 if it is after the end, and 0 if the point is inside the segment.
-bool pointInsideSegment(const Point *A, const Segment *segment)
+// Checks if the given point is in the segment. If strict
+// is true, the point must not be on the segment bounds.
+bool isPointInSegment(const Point *A, const Segment *segment, bool strict)
 {
 	const Point *start = segment->start, *end = segment->end;
-	const double dirTo_end_X = end->x - start->x;
-	const double dirTo_end_Y = end->y - start->y;
-	const double dirTo_A_X = A->x - start->x;
-	const double dirTo_A_Y = A->y - start->y;
+	const Point vectSA = vector(start, A);
+	const Point vectSE = vector(start, end);
 
-	if (epsilonEquality(dirTo_end_X, 0.) && epsilonEquality(dirTo_end_Y, 0.)) // start equals end.
-		return (epsilonEquality(dirTo_A_X, 0.) && epsilonEquality(dirTo_A_Y, 0.));
+	if (pointEquality(start, end))
+		return !strict && pointEquality(start, A);
 
 	// Checking if A isn't anywhere on the line. Test is det(A-S, E-S) != 0
-	if (!epsilonEquality(determinant(dirTo_A_X, dirTo_A_Y, dirTo_end_X, dirTo_end_Y), 0.))
-		return -2;
+	if (!epsilonEquality(detFromPoints(&vectSA, &vectSE), 0.))
+		return 0;
 
-	if ((epsilonEquality(dirTo_end_X, 0.) || dirTo_A_X / dirTo_end_X <= 0.) &&
-		(epsilonEquality(dirTo_end_Y, 0.) || dirTo_A_Y / dirTo_end_Y <= 0.)) // A is before the start of the segment.
-		return -1;
-	if ((epsilonEquality(dirTo_end_X, 0.) || dirTo_A_X / dirTo_end_X >= 1.) &&
-		(epsilonEquality(dirTo_end_Y, 0.) || dirTo_A_Y / dirTo_end_Y >= 1.)) // A is after the start of the segment.
-		return 1;
-	else
-		return 0; // A is inside the segment.
+	const double ratioX = vectSA.x / vectSE.x;
+	const double ratioY = vectSA.y / vectSE.y;
+	const double tmin = strict ?    EPSILON : 0.;
+	const double tmax = strict ? 1.-EPSILON : 1.;
+	return (epsilonEquality(vectSE.x, 0.) || (tmin <= ratioX && ratioX <= tmax))
+		&& (epsilonEquality(vectSE.y, 0.) || (tmin <= ratioY && ratioY <= tmax));
 }
 
 /////////////////////////////////////////////
 
-// Returns true if there is a non trivial intersection.
-bool segmentsNonTrivialIntersection(const Segment *segment_1, const Segment *segment_2)
+// Returns true if the segments intersect in a point, and if so fills it.
+// If strict is true, the intersection must not be on any segment bounds.
+bool segmentsIntersection(const Segment *segment1, const Segment *segment2, bool strict, Point *p)
 {
-	Point p = {0};
-	const Line l1 = lineFromPoints(segment_1->start, segment_1->end);
-	const Line l2 = lineFromPoints(segment_2->start, segment_2->end);
-	const bool res = linesIntersection(&l1, &l2, &p);
+	const Line l1 = lineFromPoints(segment1->start, segment1->end);
+	const Line l2 = lineFromPoints(segment2->start, segment2->end);
+	const bool res = linesIntersection(&l1, &l2, p);
+	return res && isPointInSegment(p, segment1, strict) && isPointInSegment(p, segment2, strict);
 
+	// TODO: optimize more this function?
 	// printPoint(p);
-	// Point *A = segment_1->start, *B = segment_1->end;
-	// Point *C = segment_2->start, *D = segment_2->end;
+	// Point *A = segment1->start, *B = segment1->end;
+	// Point *C = segment2->start, *D = segment2->end;
 	// Point BmA = {B->x - A->x, B->y - A->y}, DmC = {D->x - C->x, D->y - D->x};
 	// printf("det: %.4f\n", detFromPoints(&BmA, &DmC));
 	// const double xx = (detFromPoints(C, D) - detFromPoints(A, &DmC)) / detFromPoints(&BmA, &DmC);
 	// printf("%.4f\n", xx);
-
-	return res && pointInsideSegment(&p, segment_1) == 0 && pointInsideSegment(&p, segment_2) == 0;
 }
-// TODO: optimize this function?
 
 /////////////////////////////////////////////
 
@@ -215,7 +214,7 @@ double area2(const Point *A, const Point *B, const Point *C)
 bool isInPolygon(const Point *p, const Point polygonPoints[N_SIDES], const Line polygonlines[N_SIDES])
 {
 	for (int i = 0; i < N_SIDES; ++i) {
-		if (!isPointInHalfPlanePoint(p, polygonPoints + (i+2) % N_SIDES, polygonlines + i))
+		if (!isPointInHalfPlane(p, polygonPoints + (i+2) % N_SIDES, polygonlines + i, false))
 			return false;
 	}
 	return true;
@@ -230,11 +229,31 @@ bool isPointInArray(const Point *p, const Point *array, int length)
 	return false;
 }
 
-// Idea: compute non trivial intersections surface!
-// To realize that, compute every intersection poitn of sides, keep them along with
-// polygons corners inside the intersection. Said intersection is the convex hull of those points,
+// First point is fixed. Then step by step, the next point will
+// be the closest to the current one among the remaining ones.
+void rearrange(Point *array, int length)
+{
+	for (int i = 0; i < length-1; ++i) {
+		double d2min = INFINITY;
+		int idxmin = 0;
+		for (int j = i+1; j < length; ++j) {
+			const double d2 = distance2(array + i, array + j);
+			if (d2 < d2min) {
+				d2min = d2;
+				idxmin = j;
+			}
+		}
+		const Point temp = array[i+1];
+		array[i+1] = array[idxmin];
+		array[idxmin] = temp;
+	}
+}
+
+// Idea: compute non-zero intersections area!
+// To realize that, compute every intersection point of sides, keep them along with polygons
+// corners inside the intersection. Said intersection is the convex hull of those points,
 // to compute it just divide the area in triangles.
-double intersectionArea2(const Polygon *pol1, const Polygon *pol2)
+double intersectionArea(const Polygon *pol1, const Polygon *pol2)
 {
 	Line lines1[N_SIDES] = {0};
 	Line lines2[N_SIDES] = {0};
@@ -243,24 +262,102 @@ double intersectionArea2(const Polygon *pol1, const Polygon *pol2)
 		lines2[i] = lineFromPoints(pol2->points + i, pol2->points + (i+1) % N_SIDES);
 	}
 
-	// 2*N_SIDES should be the max non trivial intersection points:
+	// 2*N_SIDES should be the max number of points of any intersection:
 	Point allIntersections[2*N_SIDES] = {0};
 	int idx = 0;
+
+	// N.B: isInPolygon does not check if it is inside the interior... But that is actually ok.
+
+	////////////////
+
+	// ...
 	for (int i = 0; i < N_SIDES; ++i) {
 		if (isInPolygon(pol1->points + i, pol2->points, lines2)) // corners are accepted
 			allIntersections[idx++] = pol1->points[i];
 		if (isInPolygon(pol2->points + i, pol1->points, lines1)) // corners are accepted
 			allIntersections[idx++] = pol2->points[i];
 	}
+
+	// ...
 	for (int i = 0; i < N_SIDES; ++i) {
 		for (int j = 0; j < N_SIDES; ++j) {
 			Point p = {0};
 			if (linesIntersection(lines1 + i, lines2 + j, &p) && !isPointInArray(&p, allIntersections, idx))
 				allIntersections[idx++] = p; // adding the intersection which is not a corner.
+
+			// This won't work, use segmentsIntersection() instead.
 		}
 	}
-	assert(idx <= 2*N_SIDES); // to be sure.
 
-	// TODO: sort intersection points, split in triangles and sum the squared areas.
-	return 0.;
+	if (idx == 0) // no intersection
+		return 0.;
+
+	////////////////
+
+	// // ...
+	// for (int i = 0; i < N_SIDES; ++i) {
+	// 	for (int j = 0; j < N_SIDES; ++j) {
+	// 		Point p = {0};
+	// 		if (linesIntersection(lines1 + i, lines2 + j, &p))
+	// 			allIntersections[idx++] = p; // adding the intersection which is not a corner.
+	// 	}
+	// }
+
+	// if (idx == 0) // no intersection
+	// 	return 0.;
+
+	// // ...
+	// for (int i = 0; i < N_SIDES; ++i) {
+	// 	if (!isPointInArray(&p, allIntersections, idx) && isInPolygon(pol1->points + i, pol2->points, lines2)) // corners are accepted
+	// 		allIntersections[idx++] = pol1->points[i];
+	// 	if (!isPointInArray(&p, allIntersections, idx) && isInPolygon(pol2->points + i, pol1->points, lines1)) // corners are accepted
+	// 		allIntersections[idx++] = pol2->points[i];
+	// }
+
+	////////////////
+
+	if (!(idx > 2)) {
+		printf("!(idx > 2)\n");
+		exit(1);
+	}
+	if (!(idx <= 2*N_SIDES)) {
+		printf("!(idx <= 2*N_SIDES)\n"); // to be sure.
+		exit(1);
+	}
+
+	if (idx > 3)
+		rearrange(allIntersections, idx);
+
+	// Sorting the intersection points, and splitting in triangles to sum the areas:
+
+	////////////////
+	// Method 1:
+	Point center = {0};
+	for (int i = 0; i < idx; ++i) {
+		center.x += allIntersections[i].x;
+		center.y += allIntersections[i].y;
+	}
+	center.x /= idx;
+	center.y /= idx;
+
+	double totalArea1 = 0.;
+	for (int i = 0; i < idx; ++i)
+		totalArea1 += sqrt(area2(&center, allIntersections + i, allIntersections + (i+1) % idx));
+	// return totalArea;
+
+	////////////////
+	// Method 2:
+	double totalArea2 = 0.;
+	for (int i = 1; i < idx-1; ++i) // idx-2 triangles
+		totalArea2 += sqrt(area2(allIntersections, allIntersections + i, allIntersections + (i+1)));
+	// return totalArea;
+
+	////////////////
+	// Sum the squared areas instead?
+
+	if (!epsilonEquality(totalArea1, totalArea2)) {
+		printf("Incompatible areas: %g vs %g\n", totalArea1, totalArea2);
+		exit(1);
+	}
+	return totalArea1;
 }

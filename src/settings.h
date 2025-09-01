@@ -4,7 +4,7 @@
 #define N_SIDES (4)
 
 // Polygons functions settings:
-#define EPSILON        (1.e-6)
+#define EPSILON        (1.e-9)
 #define INIT_MARGIN    (0.50)
 
 #define NEIGHBOURHOOD  (10)
@@ -23,7 +23,7 @@
 #define WINDOW_HEIGHT (1000)
 #define POINT_SIZE      (8)
 #define DRAW_SCALE   (100.) // TODO: improve on this.
-#define FONT_SIZE      (25)
+#define FONT_SIZE      (30)
 #define QUIT_KEY_1 (SDLK_ESCAPE)
 #define QUIT_KEY_2 (SDLK_q)
 

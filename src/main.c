@@ -48,10 +48,14 @@ int main(int argc, char const *argv[])
 
 void testIntersection(void)
 {
-	Point A = {-1, 0}, B = {1, 0};
-	Point C = {0, -1}, D = {0, 1};
+	Point p = {0};
+	const Point A = {-1, 0}, B = {1, 0};
+	const Point C = {0, -1}, D = {0, 1};
 	const Segment AB = {&A, &B}, CD = {&C, &D};
-	printf("Intersection: %d\n", segmentsNonTrivialIntersection(&AB, &CD));
+	const bool res = segmentsIntersection(&AB, &CD, true, &p);
+	printf("Intersection: %d\n", res);
+	if (res)
+		printPoint(&p);
 	exit(0);
 }
 

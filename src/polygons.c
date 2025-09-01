@@ -102,8 +102,8 @@ inline double findBigPolygonSize(const Polygon *polArray, int n_polygons)
 	return fmax(b.xmax - b.xmin, b.ymax - b.ymin);
 }
 
-// Only pertinent when the polygons do not intersect non trivially,
-// this should be verified with checkConfiguration() beforehand.
+// Only pertinent if no pairwise polygons intersection has a non-zero
+// area, this should be verified with checkConfiguration() beforehand.
 void findErrorRatio(const Polygon *polArray, int n_polygons, double *side, double *error)
 {
 	*side = findBigPolygonSize(polArray, n_polygons);
@@ -128,24 +128,25 @@ bool checkConfiguration(const Polygon *polArray, int n_polygons)
 	return true;
 }
 
-// Only returns true on non-trivial intersections.
+// Returns true when the polygons intersection has non-zero area.
 bool intersects(const Polygon *pol1, const Polygon *pol2)
 {
 	// Huge optimization to not consider far away polygons.
-	if (distance2(pol1->center.x, pol1->center.y, pol2->center.x, pol2->center.y) >= Diam2)
+	if (distance2(&(pol1->center), &(pol2->center)) >= Diam2)
 		return false;
 
-	Segment segments_1[N_SIDES] = {0};
-	Segment segments_2[N_SIDES] = {0};
+	Segment segments1[N_SIDES] = {0};
+	Segment segments2[N_SIDES] = {0};
 	for (int i = 0; i < N_SIDES; ++i) {
-		segments_1[i] = (Segment) {pol1->points + i, pol1->points + (i+1) % N_SIDES};
-		segments_2[i] = (Segment) {pol2->points + i, pol2->points + (i+1) % N_SIDES};
+		segments1[i] = (Segment) {pol1->points + i, pol1->points + (i+1) % N_SIDES};
+		segments2[i] = (Segment) {pol2->points + i, pol2->points + (i+1) % N_SIDES};
 	}
 
-	// 16 pairwise segments intersections.
+	// N_SIDES² pairwise segments intersections.
 	for (int i = 0; i < N_SIDES; ++i) {
 		for (int j = 0; j < N_SIDES; ++j) {
-			if (segmentsNonTrivialIntersection(segments_1 + i, segments_2 + j))
+			Point p = {0};
+			if (segmentsIntersection(segments1 + i, segments2 + j, true, &p))
 				return true;
 		}
 	}
