@@ -26,11 +26,11 @@ int main(int argc, char const *argv[])
 	for (int i = 0; i < n_squares; ++i) {
 		// const double x = rng32_nextFloat(&rng), y = rng32_nextFloat(&rng), theta = rng32_nextFloat(&rng);
 		const double x = i / n_side, y = i % n_side, theta = 0.;
-		sqArray[i] = createSquare(x, y, x + cos(theta), y + sin(theta), 1);
+		sqArray[i] = createSquare(x, y, x + cos(theta), y + sin(theta), POS);
 		printSquare(sqArray + i);
 	}
-	const double total_size = findBoundingSize(sqArray, n_squares);
-	printf("Total size: %.3f\n", total_size);
+	const double error_ratio = findErrorRatio(sqArray, n_squares);
+	printf("Error ratio: %.3f\n", error_ratio);
 
 	animation(sqArray, n_squares);
 	free(sqArray);

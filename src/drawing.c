@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "drawing.h"
+#include "settings.h"
 
 extern SDL_Window *window;
 extern SDL_Renderer *renderer;

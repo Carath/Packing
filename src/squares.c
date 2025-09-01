@@ -9,15 +9,14 @@
 inline double distance2(double x1, double y1, double x2, double y2);
 inline void replace4Rot(double *x, double *y, double xCenter, double yCenter, double co, double si);
 
-Square createSquare(double xA, double yA, double xB, double yB, bool direc)
+Square createSquare(double xA, double yA, double xB, double yB, Direction d)
 {
 	assert(fabs(distance2(xA, yA, xB, yB) - 1.) < EPSILON);
-	const int sign = 2*direc-1; // in {-1, 1}
 	Square s = {0};
 	s.xA = xA, s.yA = yA;
 	s.xB = xB, s.yB = yB;
-	s.xC = xB - sign * (yB-yA);
-	s.yC = yB + sign * (xB-xA);
+	s.xC = xB - d * (yB-yA);
+	s.yC = yB + d * (xB-xA);
 	s.xD = xA + s.xC - xB;
 	s.yD = yA + s.yC - yB;
 	s.xCenter = (s.xA + s.xC) / 2.;
@@ -76,13 +75,15 @@ void mutation(rng32 *rng, Square *s)
 	// Rotations are rarely done. Optimization: only apply the
 	// rotation when the picked random value is small enough.
 	const float angle = rng32_nextFloat(rng);
-	if (EPSILON < angle && angle < ROTATION_PROBA)
-		rotation(s, angle);
+	if (angle < ROTATION_PROBA)
+		rotation(s, angle - ROTATION_PROBA/2.); // angle between -ROTATION_PROBA/2. and ROTATION_PROBA/2.
 	translation(s, STEP_SIZE * rng32_nextFloat(rng), STEP_SIZE * rng32_nextFloat(rng));
 }
 
-double findBoundingSize(const Square *sqArray, int n_squares)
+// Only pertinent when the squares do not intersect non trivially.
+double findErrorRatio(const Square *sqArray, int n_squares)
 {
+	assert(checkConfiguration(sqArray, n_squares));
 	double xmin = INFINITY, xmax = -INFINITY, ymin = INFINITY, ymax = -INFINITY;
 	for (int i = 0; i < n_squares; ++i) {
 		xmin = fmin(xmin, sqArray[i].xA);
@@ -108,7 +109,19 @@ double findBoundingSize(const Square *sqArray, int n_squares)
 	printf( "xmin: %.3f, xmax: %.3f\n"
 			"ymin: %.3f, ymax: %.3f\n",
 			xmin, xmax, ymin, ymax);
-	return fmax(xmax - xmin, ymax - ymin);
+	return 1. - n_squares / fmax(xmax - xmin, ymax - ymin);
+	// return fmax(xmax - xmin, ymax - ymin) / n_squares - 1.;
+}
+
+bool checkConfiguration(const Square *sqArray, int n_squares)
+{
+	for (int i = 0; i < n_squares; ++i) {
+		for (int j = i+1; j < n_squares; ++j) {
+			if (intersects(sqArray + i, sqArray + j))
+				return false;
+		}
+	}
+	return true;
 }
 
 // Only returns true on non-trivial intersections.
