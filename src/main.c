@@ -50,7 +50,7 @@ void intersectionTest(void)
 	Point A = {-1, 0}, B = {1, 0};
 	Point C = {0, -1}, D = {0, 1};
 	const Segment AB = {&A, &B}, CD = {&C, &D};
-	printf("Intersection: %d\n", segmentsIntersection(&AB, &CD));
+	printf("Intersection: %d\n", segmentsNonTrivialIntersection(&AB, &CD));
 	exit(0);
 }
 
@@ -150,3 +150,7 @@ void optimize_2(Solution *sol, rng32 *rng, int iterationNumber)
 
 // Issues:
 // - Somehow, clang gives different results even w/o any optimization...
+
+// TODO (later):
+// - refactor the square struct?
+// - generalize from squares to regular polygons?

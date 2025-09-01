@@ -20,6 +20,12 @@ typedef struct
 	double a, b, c;
 } Line;
 
+typedef struct
+{
+	double xA, yA, xB, yB, xC, yC, xD, yD;
+	double xCenter, yCenter;
+} Square; // square length = 1.
+
 // TODO: inline short functions
 
 /////////////////////////////////////////////
@@ -27,11 +33,11 @@ typedef struct
 /////////////////////////////////////////////
 
 // Checks if x = y, short of EPSILON:
-int epsilonEquality(double x, double y);
+bool epsilonEquality(double x, double y);
 
 
 // Checks if x < y, short of EPSILON:
-int epsilonStrInequality(double x, double y);
+bool epsilonStrInequality(double x, double y);
 
 /////////////////////////////////////////////
 // Points:
@@ -40,7 +46,7 @@ int epsilonStrInequality(double x, double y);
 void printPoint(const Point *point);
 
 // Checks if the two given points are equal:
-int pointEquality(const Point *A, const Point *B);
+bool pointEquality(const Point *A, const Point *B);
 
 double determinant(double x1, double y1, double x2, double y2);
 
@@ -76,17 +82,27 @@ Line lineFromPoints(const Point *A, const Point *B);
 bool linesIntersection(const Line *line1, const Line *line2, Point *p);
 
 // Checks if the given point is in the half plane defined by a line and another point:
-int isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, const Line *line);
+bool isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, const Line *line);
 
 // Checks the position of a points versus a segment.
 // Returns -2 if the point isn't on the segment's line, -1 if it is before the start,
 // 1 if it is after the end, and 0 if the point is inside the segment.
-int pointInsideSegment(const Point *A, const Segment *segment);
+bool pointInsideSegment(const Point *A, const Segment *segment);
+
+/////////////////////////////////////////////
 
 // Returns true if there is a non trivial intersection.
-bool segmentsIntersection(const Segment *segment_1, const Segment *segment_2);
+bool segmentsNonTrivialIntersection(const Segment *segment_1, const Segment *segment_2);
+
+/////////////////////////////////////////////
 
 // Returns the squared area of the triangle ABC, using Heron's formula:
 double area2(const Point *A, const Point *B, const Point *C);
+
+bool isInSquare(const Point *p, const Point squarePoints[4], const Line squarelines[4]);
+
+bool isPointInArray(const Point *p, const Point *array, int length);
+
+double intersectionArea2(const Square *s1, const Square *s2);
 
 #endif

@@ -10,12 +10,6 @@ typedef enum {POS = 1, NEG = -1} Direction;
 
 typedef struct
 {
-	double xA, yA, xB, yB, xC, yC, xD, yD;
-	double xCenter, yCenter;
-} Square; // square length = 1.
-
-typedef struct
-{
 	double xmin, xmax, ymin, ymax;
 } Box;
 

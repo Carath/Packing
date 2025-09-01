@@ -9,19 +9,19 @@
 /////////////////////////////////////////////
 
 // Checks if x = y, short of EPSILON:
-inline int epsilonEquality(double x, double y)
+inline bool epsilonEquality(double x, double y)
 {
 	return fabs(x - y) < EPSILON;
 }
 
 // Checks if x < y, short of EPSILON:
-inline int epsilonStrInequality(double x, double y)
+inline bool epsilonStrInequality(double x, double y)
 {
 	return y - x > EPSILON;
 }
 
 // Checks if x <= y:
-inline int epsilonInequality(double x, double y)
+inline bool epsilonInequality(double x, double y)
 {
 	return x <= y;
 }
@@ -37,7 +37,7 @@ void printPoint(const Point *point)
 }
 
 // Checks if the two given points are equal:
-int pointEquality(const Point *A, const Point *B)
+bool pointEquality(const Point *A, const Point *B)
 {
 	// assert(A && B);
 	return epsilonEquality(A->x, B->x) && epsilonEquality(A->y, B->y);
@@ -130,7 +130,7 @@ bool linesIntersection(const Line *line1, const Line *line2, Point *p)
 }
 
 // Checks if the given point is in the half plane defined by a line and another point:
-int isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, const Line *line)
+bool isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, const Line *line)
 {
 	// assert(point_test && point_ref && line);
 	const int sign = line->a * point_ref->x + line->b * point_ref->y + line->c >= 0. ? 1 : -1;
@@ -142,34 +142,13 @@ int isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, con
 // Checks the position of a points versus a segment.
 // Returns -2 if the point isn't on the segment's line, -1 if it is before the start,
 // 1 if it is after the end, and 0 if the point is inside the segment.
-int pointInsideSegment(const Point *A, const Segment *segment)
+bool pointInsideSegment(const Point *A, const Segment *segment)
 {
 	const Point *start = segment->start, *end = segment->end;
 	const double dirTo_end_X = end->x - start->x;
 	const double dirTo_end_Y = end->y - start->y;
 	const double dirTo_A_X = A->x - start->x;
 	const double dirTo_A_Y = A->y - start->y;
-
-	// if (epsilonEquality(dirTo_end_X, 0.) && epsilonEquality(dirTo_end_Y, 0.)) // start equals end.
-	// 	return (epsilonEquality(dirTo_A_X, 0.) && epsilonEquality(dirTo_A_Y, 0.));
-
-	// const double ratioX = dirTo_A_X / dirTo_end_X;
-	// const double ratioY = dirTo_A_Y / dirTo_end_Y;
-
-	// if (!epsilonEquality(ratioX, ratioY)) { // A isn't anywhere on the line.
-	// 	// printf("here! %.6f vs %.6f, %d\n", ratioX, ratioY, dirTo_end_X == 0. || dirTo_end_Y == 0.);
-	// 	// printPoint(A);
-	// 	// printSegment(segment);
-	// 	return -2;
-	// }
-	// if (epsilonInequality(ratioX, 0.)) // A is before the start of the segment.
-	// 	return -1;
-	// if (epsilonInequality(1., ratioX)) // A is after the end of the segment.
-	// 	return 1;
-	// else
-	// 	return 0; // A is inside the segment.
-	// // This breaks with perfectly horizontal or vertical segments...
-
 
 	if (epsilonEquality(dirTo_end_X, 0.) && epsilonEquality(dirTo_end_Y, 0.)) // start equals end.
 		return (epsilonEquality(dirTo_A_X, 0.) && epsilonEquality(dirTo_A_Y, 0.));
@@ -191,7 +170,7 @@ int pointInsideSegment(const Point *A, const Segment *segment)
 /////////////////////////////////////////////
 
 // Returns true if there is a non trivial intersection.
-bool segmentsIntersection(const Segment *segment_1, const Segment *segment_2)
+bool segmentsNonTrivialIntersection(const Segment *segment_1, const Segment *segment_2)
 {
 	Point p = {0};
 	const Line l1 = lineFromPoints(segment_1->start, segment_1->end);
@@ -210,6 +189,8 @@ bool segmentsIntersection(const Segment *segment_1, const Segment *segment_2)
 }
 // TODO: optimize this function?
 
+/////////////////////////////////////////////
+
 // Returns the squared area of the triangle ABC, using Heron's formula:
 double area2(const Point *A, const Point *B, const Point *C)
 {
@@ -221,7 +202,77 @@ double area2(const Point *A, const Point *B, const Point *C)
 	return s*(s-a)*(s-b)*(s-c);
 }
 
+bool isInSquare(const Point *p, const Point squarePoints[4], const Line squarelines[4])
+{
+	return isPointInHalfPlanePoint(p, squarePoints + 2, squarelines    )
+		&& isPointInHalfPlanePoint(p, squarePoints + 3, squarelines + 1)
+		&& isPointInHalfPlanePoint(p, squarePoints    , squarelines + 2)
+		&& isPointInHalfPlanePoint(p, squarePoints + 1, squarelines + 3);
+
+	// for (int i = 0; i < 4; ++i) {
+	// 	if (!isPointInHalfPlanePoint(p, squarePoints + (i+2)%4, squarelines + i))
+	// 		return false;
+	// }
+	// return true;
+}
+
+bool isPointInArray(const Point *p, const Point *array, int length)
+{
+	for (int i = 0; i < length; ++i) {
+		if (pointEquality(p, array + i))
+			return true;
+	}
+	return false;
+}
+
 // Idea: compute non trivial intersections surface!
 // To realize that, compute every intersection poitn of sides, keep them along with
 // squares corners inside the intersection. Said intersection is the convex hull of those points,
 // to compute it just divide the area in triangles.
+double intersectionArea2(const Square *s1, const Square *s2)
+{
+	const Point A1 = {s1->xA, s1->yA}, A2 = {s2->xA, s2->yA};
+	const Point B1 = {s1->xB, s1->yB}, B2 = {s2->xB, s2->yB};
+	const Point C1 = {s1->xC, s1->yC}, C2 = {s2->xC, s2->yC};
+	const Point D1 = {s1->xD, s1->yD}, D2 = {s2->xD, s2->yD};
+
+	const Point points1[4] = {A1, B1, C1, D1}, points2[4] = {A2, B2, C2, D2};
+
+	const Line lines1[4] = {
+		lineFromPoints(&A1, &B1), lineFromPoints(&B1, &C1),
+		lineFromPoints(&C1, &D1), lineFromPoints(&D1, &A1),
+	};
+	const Line lines2[4] = {
+		lineFromPoints(&A2, &B2), lineFromPoints(&B2, &C2),
+		lineFromPoints(&C2, &D2), lineFromPoints(&D2, &A2),
+	};
+
+	// Line lines1[4] = {0};
+	// for (int i = 0; i < 4; ++i) {
+	// 	lines1[i] = lineFromPoints(points1[i], points1[(i+1)%4]);
+	// }
+	// Line lines2[4] = {0};
+	// for (int i = 0; i < 4; ++i) {
+	// 	lines2[i] = lineFromPoints(points2[i], points2[(i+1)%4]);
+	// }
+
+	Point allIntersections[8 * 3] = {0}; // 8 should be the max non trivial intersection points, adding some margin.
+	int idx = 0;
+	for (int i = 0; i < 4; ++i) {
+		if (isInSquare(points1 + i, points2, lines2)) // corners are accepted
+			allIntersections[idx++] = points1[i];
+		if (isInSquare(points2 + i, points1, lines1)) // corners are accepted
+			allIntersections[idx++] = points2[i];
+	}
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			Point p = {0};
+			if (linesIntersection(lines1 + i, lines2 + j, &p) && !isPointInArray(&p, allIntersections, idx))
+				allIntersections[idx++] = p; // adding the intersection which is not a corner.
+		}
+	}
+	assert(idx <= 8); // to be sure.
+
+	// TODO: sort intersection points, split in triangles and sum the squared areas.
+	return 0.;
+}

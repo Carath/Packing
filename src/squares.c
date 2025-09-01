@@ -79,6 +79,8 @@ void mutation(rng32 *rng, Square *s)
 	// 	rotation(s, angle);
 	// }
 
+	// TODO: try rotating around the corners too?
+
 	translation(s, STEP_SIZE * rng32_nextFloat(rng), STEP_SIZE * rng32_nextFloat(rng));
 }
 
@@ -146,13 +148,13 @@ bool intersects(const Square *s1, const Square *s2)
 		(Point) {s1->xA, s1->yA},
 		(Point) {s1->xB, s1->yB},
 		(Point) {s1->xC, s1->yC},
-		(Point) {s1->xD, s1->yD}
+		(Point) {s1->xD, s1->yD},
 	};
 	Point points_2[4] = {
 		(Point) {s2->xA, s2->yA},
 		(Point) {s2->xB, s2->yB},
 		(Point) {s2->xC, s2->yC},
-		(Point) {s2->xD, s2->yD}
+		(Point) {s2->xD, s2->yD},
 	};
 	const Segment segments_1[4] = {
 		(Segment) {points_1    , points_1 + 1},
@@ -164,13 +166,13 @@ bool intersects(const Square *s1, const Square *s2)
 		(Segment) {points_2    , points_2 + 1},
 		(Segment) {points_2 + 1, points_2 + 2},
 		(Segment) {points_2 + 2, points_2 + 3},
-		(Segment) {points_2 + 3, points_2    }
+		(Segment) {points_2 + 3, points_2    },
 	};
 
 	// 16 pairwise segments intersections.
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 4; ++j) {
-			if (segmentsIntersection(segments_1 + i, segments_2 + j))
+			if (segmentsNonTrivialIntersection(segments_1 + i, segments_2 + j))
 				return true;
 		}
 	}
