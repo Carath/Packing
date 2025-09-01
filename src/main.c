@@ -146,3 +146,7 @@ void optimize_2(Solution *sol, rng32 *rng, int iterationNumber)
 
 // TODO:
 // - save good quality configurations.
+// - add other init positions?
+
+// Issues:
+// - Somehow, clang gives different results even w/o any optimization...

@@ -64,9 +64,8 @@ inline double distance2(double x1, double y1, double x2, double y2)
 double distance(const Point *A, const Point *B)
 {
 	// assert(A && B);
-	const double delta_x = A->x - B->x, delta_y = A->y - B->y;
-	return sqrt(delta_x * delta_x + delta_y * delta_y);
-	// return hypot(delta_x, delta_y);
+	return sqrt(distance2(A->x, A->y, B->x, B->y));
+	// return hypot(B->x - A->x, B->y - A->y);
 }
 
 // inline double detFromPoints(const Point *A, const Point *B)
@@ -125,8 +124,8 @@ bool linesIntersection(const Line *line1, const Line *line2, Point *p)
 		return false;
 	}
 
-	p->x = (b1 * c2 - b2 * c1) / det;
-	p->y = (a2 * c1 - a1 * c2) / det;
+	p->x = determinant(b1, b2, c1, c2) / det;
+	p->y = determinant(c1, c2, a1, a2) / det;
 	return true;
 }
 
@@ -136,6 +135,8 @@ int isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, con
 	// assert(point_test && point_ref && line);
 	const int sign = line->a * point_ref->x + line->b * point_ref->y + line->c >= 0. ? 1 : -1;
 	return sign * (line->a * point_test->x + line->b * point_test->y + line->c) >= 0.;
+	// const int sign = scalarProduct(line->a, line->b, point_ref->x, point_ref->y) + line->c >= 0. ? 1 : -1;
+	// return sign * (scalarProduct(line->a, line->b, point_test->x, point_test->y) + line->c) >= 0.;
 }
 
 // Checks the position of a points versus a segment.
@@ -174,7 +175,7 @@ int pointInsideSegment(const Point *A, const Segment *segment)
 		return (epsilonEquality(dirTo_A_X, 0.) && epsilonEquality(dirTo_A_Y, 0.));
 
 	// Checking if A isn't anywhere on the line. Test is det(A-S, E-S) != 0
-	if (!epsilonEquality(dirTo_A_X * dirTo_end_Y - dirTo_A_Y * dirTo_end_X, 0.))
+	if (!epsilonEquality(determinant(dirTo_A_X, dirTo_A_Y, dirTo_end_X, dirTo_end_Y), 0.))
 		return -2;
 
 	if ((epsilonEquality(dirTo_end_X, 0.) || dirTo_A_X / dirTo_end_X <= 0.) &&
@@ -208,3 +209,19 @@ bool segmentsIntersection(const Segment *segment_1, const Segment *segment_2)
 	return res && pointInsideSegment(&p, segment_1) == 0 && pointInsideSegment(&p, segment_2) == 0;
 }
 // TODO: optimize this function?
+
+// Returns the squared area of the triangle ABC, using Heron's formula:
+double area2(const Point *A, const Point *B, const Point *C)
+{
+	// assert(A && B && C);
+	const double a = distance(A, B);
+	const double b = distance(B, C);
+	const double c = distance(C, A);
+	const double s = (a + b + c) / 2.; // half perimeter
+	return s*(s-a)*(s-b)*(s-c);
+}
+
+// Idea: compute non trivial intersections surface!
+// To realize that, compute every intersection poitn of sides, keep them along with
+// squares corners inside the intersection. Said intersection is the convex hull of those points,
+// to compute it just divide the area in triangles.

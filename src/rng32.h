@@ -106,7 +106,7 @@ __attribute__((unused)) static void rng32_init(void *generic_rng32, uint64_t see
 
 static inline float rng32_nextFloat(void *generic_rng32)
 {
-	return (float) rng32_nextInt(generic_rng32) / RNG32_MAX;
+	return rng32_nextInt(generic_rng32) / (float) RNG32_MAX;
 }
 
 #if __cplusplus

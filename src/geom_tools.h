@@ -86,4 +86,7 @@ int pointInsideSegment(const Point *A, const Segment *segment);
 // Returns true if there is a non trivial intersection.
 bool segmentsIntersection(const Segment *segment_1, const Segment *segment_2);
 
+// Returns the squared area of the triangle ABC, using Heron's formula:
+double area2(const Point *A, const Point *B, const Point *C);
+
 #endif

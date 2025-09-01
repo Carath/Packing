@@ -6,8 +6,6 @@
 
 // static const double twoPi = 6.28318530718;
 
-inline void replace4Rot(double *x, double *y, double xCenter, double yCenter, double co, double si);
-
 Square createSquare(double xA, double yA, double xB, double yB, Direction d)
 {
 	assert(fabs(distance2(xA, yA, xB, yB) - 1.) < EPSILON);
@@ -45,7 +43,7 @@ void translation(Square *s, double xDelta, double yDelta)
 }
 
 // Useful to update two variables while preventing side effects!
-inline void replace4Rot(double *x, double *y, double xCenter,
+static inline void replace4Rot(double *x, double *y, double xCenter,
 	double yCenter, double co, double si)
 {
 	const double xDelta = *x - xCenter, yDelta = *y - yCenter;

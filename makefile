@@ -30,6 +30,7 @@ endif
 
 # N.B: gcc for C, g++ for C++, alternative: clang.
 CC := gcc
+# CC := clang
 CPPFLAGS :=
 CFLAGS := -std=c99 -Wall -O2 $(PROCESSOR_ARCH) $(GRAPHIC_FLAGS) $(OPENMP)
 LDFLAGS :=
