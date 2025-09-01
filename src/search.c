@@ -6,7 +6,7 @@
 #include <assert.h>
 #include "search.h"
 
-Solution init(int n_polygons, rng32 *rng)
+Solution init(int n_polygons, rng_type *rng)
 {
 	// const double diameter = 2. * getRadius();
 	const int n_side = (int) sqrtf(n_polygons);
@@ -24,7 +24,7 @@ Solution init(int n_polygons, rng32 *rng)
 	return (Solution) {polArray, n_polygons, side, error};
 }
 
-void optimize(Solution *sol, rng32 *rng, int iterationNumber)
+void optimize(Solution *sol, rng_type *rng, int iterationNumber)
 {
 	const int n_polygons = sol->n_polygons;
 	Polygon *polArray = sol->polArray;
@@ -33,7 +33,7 @@ void optimize(Solution *sol, rng32 *rng, int iterationNumber)
 	for (int i = 0; i < iterationNumber; ++i) {
 		for (int j = 0; j < n_polygons; ++j) {
 			const int idx = j; // trying to move every polygon before evaluating.
-			// const int idx = rng32_nextInt(rng) % n_polygons;
+			// const int idx = rng_type_nextInt(rng) % n_polygons;
 			mutation(rng, polArray + idx);
 		}
 		if (checkConfiguration(polArray, n_polygons)) {
@@ -52,7 +52,7 @@ void optimize(Solution *sol, rng32 *rng, int iterationNumber)
 	free(best_polArray);
 }
 
-void optimize_2(Solution *sol, rng32 *rng, int iterationNumber)
+void optimize_2(Solution *sol, rng_type *rng, int iterationNumber)
 {
 	const int n_polygons = sol->n_polygons;
 	Polygon *polArray = sol->polArray;
@@ -74,7 +74,7 @@ void optimize_2(Solution *sol, rng32 *rng, int iterationNumber)
 		for (int k = 0; k < NEIGHBOURHOOD; ++k) { // for local exploration
 			for (int j = 0; j < n_polygons; ++j) {
 				const int idx = j; // trying to move every polygon before evaluating.
-				// const int idx = rng32_nextInt(rng) % n_polygons;
+				// const int idx = rng_type_nextInt(rng) % n_polygons;
 				mutation(rng, buffer[k] + idx);
 			}
 			if (checkConfiguration(buffer[k], n_polygons)) {

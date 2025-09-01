@@ -63,9 +63,9 @@ void rotation(Polygon *pol, double angle)
 // Question: is it faster to apply the mutation on the AB segment,
 // and then regenerate the polygon with createPolygon? This would require
 // disabling the assert if said function, and save 'direc' in the struct.
-void mutation(rng32 *rng, Polygon *pol)
+void mutation(rng_type *rng, Polygon *pol)
 {
-	const float proba = rng32_nextFloat(rng);
+	const float proba = rng_real(rng);
 
 	if (proba < ROTATION_PROBA) {
 		const double angle = proba - ROTATION_PROBA/2.;
@@ -73,13 +73,13 @@ void mutation(rng32 *rng, Polygon *pol)
 	}
 
 	// if (proba < ROTATION_PROBA) {
-	// 	const double angle = (rng32_nextFloat(rng) - 0.5f) * ROTATION_RANGE;
+	// 	const double angle = (rng_real(rng) - 0.5f) * ROTATION_RANGE;
 	// 	rotation(pol, angle);
 	// }
 
 	// TODO: try rotating around the corners too?
 
-	translation(pol, STEP_SIZE * rng32_nextFloat(rng), STEP_SIZE * rng32_nextFloat(rng));
+	translation(pol, STEP_SIZE * rng_real(rng), STEP_SIZE * rng_real(rng));
 }
 
 Box findBoundary(const Polygon *polArray, int n_polygons)

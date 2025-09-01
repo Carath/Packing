@@ -9,7 +9,7 @@
 #include "search.h"
 
 void testIntersection(void);
-void testPolygonCreation(rng32 *rng);
+void testPolygonCreation(rng_type *rng);
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
@@ -20,8 +20,8 @@ int main(int argc, char const *argv[])
 
 	// const uint64_t seed = time(NULL);
 	const uint64_t seed = 123456;
-	rng32 rng = {0};
-	rng32_init(&rng, seed, 0);
+	rng_type rng = {0};
+	rng_init(&rng, seed, 0);
 
 	// testIntersection();
 	// testPolygonCreation(&rng);
@@ -59,9 +59,9 @@ void testIntersection(void)
 	exit(0);
 }
 
-void testPolygonCreation(rng32 *rng)
+void testPolygonCreation(rng_type *rng)
 {
-	Polygon pol = createPolygon(rng32_nextFloat(rng), rng32_nextFloat(rng));
+	Polygon pol = createPolygon(rng_real(rng), rng_real(rng));
 	double err_max = 0.;
 	for (int i = 0; i < N_SIDES; ++i) {
 		const double length = distance(pol.points + i, pol.points + (i+1) % N_SIDES);

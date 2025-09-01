@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include "settings.h"
 #include "geom_tools.h"
-#include "rng32.h"
 
 // typedef enum {POS = 1, NEG = -1} Direction;
 
@@ -27,7 +26,7 @@ Polygon createPolygon(double xCenter, double yCenter);
 void printPolygon(const Polygon *s);
 void translation(Polygon *s, double xDelta, double yDelta);
 void rotation(Polygon *s, double angle);
-void mutation(rng32 *rng, Polygon *s);
+void mutation(rng_type *rng, Polygon *s);
 Box findBoundary(const Polygon *polArray, int n_polygons);
 double findBigPolygonSize(const Polygon *polArray, int n_polygons);
 void findErrorRatio(const Polygon *polArray, int n_polygons, double *side, double *error);

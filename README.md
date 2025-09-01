@@ -25,5 +25,5 @@
 - improve on the mutation operator. More directed?
 - start for a more structured configuration, add some knowledge?
 - work on intersections area for a less rigid exploration.
-- rng64 for finer position updates?
+- rng64 for finer position updates? [Update: no improvement for now]
 - SDLA update?

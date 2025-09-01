@@ -29,4 +29,21 @@
 
 #define FONT_NAME ("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf")
 
+
+// Somehow, the rng64 does not help at all. This might be
+// due to the search over sensibility to small changes.
+#define RNG32
+
+#ifdef RNG32
+#include "rng32.h"
+#define rng_type rng32
+#define rng_init rng32_init
+#define rng_real rng32_nextFloat
+#else
+#include "rng64.h"
+#define rng_type rng64
+#define rng_init rng64_init
+#define rng_real rng64_nextDouble
+#endif
+
 #endif
