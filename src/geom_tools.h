@@ -37,57 +37,43 @@ int epsilonStrInequality(double x, double y);
 // Points:
 /////////////////////////////////////////////
 
-// This can be freed with a regular 'free()'.
-Point* createPoint(double x, double y);
-
 void printPoint(const Point *point);
 
 // Checks if the two given points are equal:
 int pointEquality(const Point *A, const Point *B);
 
-// Euclidean distance between the Points A and B:
-double distance(const Point *A, const Point *B);
+double determinant(double x1, double y1, double x2, double y2);
+
+double scalarProduct(double x1, double y1, double x2, double y2);
 
 // Euclidean distance squared.
 double distance2(double x1, double y1, double x2, double y2);
 
-double determinant(double x1, double y1, double x2, double y2);
+// Euclidean distance between the Points A and B:
+double distance(const Point *A, const Point *B);
 
 /////////////////////////////////////////////
 // Segments:
 /////////////////////////////////////////////
 
-// A segment may be freed with 'free()', but references to its tips must be kept!
-// Otherwise, memory will leak. Use 'freeSegmentCompletely()' to free the tips along the segment.
-Segment* createSegment(Point *start, Point *end);
-
 void printSegment(const Segment *segment);
 
-// Careful, this frees the segment tips too!
-void freeSegmentCompletely(Segment *segment);
-
 double length(const Segment *segment);
-
-// Bounding a line:
-Segment* SegmentFromLine(const Line *line);
 
 /////////////////////////////////////////////
 // Lines:
 /////////////////////////////////////////////
 
-// This can be freed with a regular 'free()'.
-Line* createLine(double a, double b, double c);
-
 void printLine(const Line *line);
 
-Line* lineFromPoints(const Point *A, const Point *B);
+Line lineFromPoints(const Point *A, const Point *B);
 
 /////////////////////////////////////////////
 // More 'advanced' geometric utilities:
 /////////////////////////////////////////////
 
-// Returns the intersection of the two lines if it exists, NULL otherwise:
-Point* linesIntersection(const Line *line1, const Line *line2);
+// Returns true if the two lines intersect, and if so fills the point.
+bool linesIntersection(const Line *line1, const Line *line2, Point *p);
 
 // Checks if the given point is in the half plane defined by a line and another point:
 int isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, const Line *line);
@@ -98,6 +84,6 @@ int isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, con
 int pointInsideSegment(const Point *A, const Segment *segment);
 
 // Returns true if there is a non trivial intersection.
-bool segmentsIntersection(const Segment *segments_1, const Segment *segments_2);
+bool segmentsIntersection(const Segment *segment_1, const Segment *segment_2);
 
 #endif

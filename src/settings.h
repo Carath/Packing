@@ -4,9 +4,17 @@
 // Squares functions settings:
 #define EPSILON        ((double) 1e-6)
 #define INIT_MARGIN    ((double) 0.50)
-#define ROTATION_PROBA ((float) 0.15f)
-#define STEP_SIZE      ((float) 0.05f)
+
+#define NEIGHBOURHOOD  (10)
+#define ROTATION_RANGE ((float) 0.05)
+
 // Those work well with n_squares = 5
+#define ROTATION_PROBA ((float) 0.15f)
+#define STEP_SIZE      ((float) 0.05)
+
+// // Those work well with n_squares = 7
+// #define ROTATION_PROBA ((float) 0.25f)
+// #define STEP_SIZE      ((float) 0.1)
 
 // Graphic settings:
 #define WINDOW_WIDTH (1200)

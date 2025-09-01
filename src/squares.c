@@ -69,12 +69,17 @@ void rotation(Square *s, double angle)
 // disabling the assert if said function, and save 'direc' in the struct.
 void mutation(rng32 *rng, Square *s)
 {
-	// Rotations are rarely done. Optimization: only apply the
-	// rotation when the picked random value is small enough.
-	const float angle = rng32_nextFloat(rng);
-	if (angle < ROTATION_PROBA)
-		rotation(s, angle - ROTATION_PROBA/2.); // angle between -ROTATION_PROBA/2. and ROTATION_PROBA/2.
-	// TODO: add a more complexe rotation scheme?
+	const float proba = rng32_nextFloat(rng);
+
+	if (proba < ROTATION_PROBA) {
+		const double angle = proba - ROTATION_PROBA/2.;
+		rotation(s, angle); // angle between -ROTATION_PROBA/2. and ROTATION_PROBA/2.
+	}
+
+	// if (proba < ROTATION_PROBA) {
+	// 	const double angle = (rng32_nextFloat(rng) - 0.5f) * ROTATION_RANGE;
+	// 	rotation(s, angle);
+	// }
 
 	translation(s, STEP_SIZE * rng32_nextFloat(rng), STEP_SIZE * rng32_nextFloat(rng));
 }
@@ -135,7 +140,7 @@ bool checkConfiguration(const Square *sqArray, int n_squares)
 // Only returns true on non-trivial intersections.
 bool intersects(const Square *s1, const Square *s2)
 {
-	// Optimizations to not consider far away squares. Min squared distance is 2c².
+	// Huge optimization to not consider far away squares. Min squared distance is 2c².
 	if (distance2(s1->xCenter, s1->yCenter, s2->xCenter, s2->yCenter) >= 2.)
 		return false;
 

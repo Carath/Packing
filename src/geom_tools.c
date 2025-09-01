@@ -30,49 +30,17 @@ inline int epsilonInequality(double x, double y)
 // Points:
 /////////////////////////////////////////////
 
-// This can be freed with a regular 'free()'.
-Point* createPoint(double x, double y)
-{
-	Point *point = (Point*) calloc(1, sizeof(Point));
-	point->x = x;
-	point->y = y;
-	return point;
-}
-
 void printPoint(const Point *point)
 {
-	if (!point)
-		printf("NULL Point.\n");
-	else
-		printf("Point: (%.2f, %.2f)\n", point->x, point->y);
+	// assert(point);
+	printf("Point: (%.2f, %.2f)\n", point->x, point->y);
 }
 
 // Checks if the two given points are equal:
 int pointEquality(const Point *A, const Point *B)
 {
-	if (!A || !B) {
-		printf("Cannot test the equality of NULL points.\n");
-		return 0;
-	}
+	// assert(A && B);
 	return epsilonEquality(A->x, B->x) && epsilonEquality(A->y, B->y);
-}
-
-// Euclidean distance between the Points A and B:
-double distance(const Point *A, const Point *B)
-{
-	if (!A || !B) {
-		printf("Cannot find a distance between NULL points.\n");
-		return 0;
-	}
-
-	const double delta_x = A->x - B->x, delta_y = A->y - B->y;
-	return sqrt(delta_x * delta_x + delta_y * delta_y);
-}
-
-// Euclidean distance squared.
-inline double distance2(double x1, double y1, double x2, double y2)
-{
-	return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
 }
 
 inline double determinant(double x1, double y1, double x2, double y2)
@@ -80,121 +48,64 @@ inline double determinant(double x1, double y1, double x2, double y2)
 	return x1 * y2 - x2 * y1;
 }
 
+inline double scalarProduct(double x1, double y1, double x2, double y2)
+{
+	return x1 * x2 + y1 * y2;
+}
+
+// Euclidean distance squared.
+inline double distance2(double x1, double y1, double x2, double y2)
+{
+	return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+	// return scalarProduct(x2 - x1, y2 - y1, x2 - x1, y2 - y1);
+}
+
+// Euclidean distance between the Points A and B:
+double distance(const Point *A, const Point *B)
+{
+	// assert(A && B);
+	const double delta_x = A->x - B->x, delta_y = A->y - B->y;
+	return sqrt(delta_x * delta_x + delta_y * delta_y);
+	// return hypot(delta_x, delta_y);
+}
+
+// inline double detFromPoints(const Point *A, const Point *B)
+// {
+// 	return A->x * B->y - A->y * B->x;
+// 	// return determinant(A->x, A->y, B->x, B->y);
+// }
+
 /////////////////////////////////////////////
 // Segments:
 /////////////////////////////////////////////
 
-// A segment may be freed with 'free()', but references to its tips must be kept!
-// Otherwise, memory will leak. Use 'freeSegmentCompletely()' to free the tips along the segment.
-Segment* createSegment(Point *start, Point *end)
-{
-	if (!start || !end) {
-		printf("Segment's tips must not be NULL.\n");
-		return NULL;
-	}
-
-	Segment *segment = (Segment*) calloc(1, sizeof(Segment));
-	segment->start = start;
-	segment->end = end;
-	return segment;
-}
-
 void printSegment(const Segment *segment)
 {
-	if (!segment)
-		printf("NULL Segment.\n");
-	else if (!(segment->start) || !(segment->end))
-		printf("Segment's start or end is NULL.\n");
-	else
-		printf("Segment: start = (%.2f, %.2f), end = (%.2f, %.2f)\n",
-			(segment->start)->x, (segment->start)->y, (segment->end)->x, (segment->end)->y);
+	// assert(segment && segment->start && segment->end);
+	printf("Segment: start = (%.2f, %.2f), end = (%.2f, %.2f)\n",
+		(segment->start)->x, (segment->start)->y, (segment->end)->x, (segment->end)->y);
 }
 
-// Careful, this frees the segment tips too!
-void freeSegmentCompletely(Segment *segment)
+inline double length(const Segment *segment)
 {
-	free(segment->start);
-	free(segment->end);
-	free(segment);
-}
-
-double length(const Segment *segment)
-{
-	if (!segment) {
-		printf("NULL Segment.\n");
-		return 0.;
-	}
-
+	// assert(segment);
 	return distance(segment->start, segment->end);
-}
-
-// Bounding a line:
-Segment* SegmentFromLine(const Line *line)
-{
-	if (!line) {
-		printf("NULL line.\n");
-		return NULL;
-	}
-
-	const double a = line->a, b = line->b, c = line->c;
-	Point *start, *end;
-	if (epsilonEquality(b, 0.)) { // Vertical line.
-		if (epsilonEquality(a, 0.)) {
-			printf("Invalid line equation.\n");
-			return NULL;
-		}
-
-		start = createPoint(- c / a, 0.);
-		end = createPoint(- c / a, WINDOW_HEIGHT);
-	}
-	else {
-		start = createPoint(0., - c / b);
-		end = createPoint(WINDOW_WIDTH, - (a * WINDOW_WIDTH + c) / b);
-	}
-
-	// Careful, start and end are not freed!
-	return createSegment(start, end);
 }
 
 /////////////////////////////////////////////
 // Lines:
 /////////////////////////////////////////////
 
-// This can be freed with a regular 'free()'.
-Line* createLine(double a, double b, double c)
-{
-	if (epsilonEquality(a, 0.) && epsilonEquality(b, 0.)) {
-		printf("Invalid line equation.\n");
-		return NULL;
-	}
-
-	Line *line = (Line*) calloc(1, sizeof(Line));
-	line->a = a;
-	line->b = b;
-	line->c = c;
-	return line;
-}
-
 void printLine(const Line *line)
 {
-	if (!line) {
-		printf("NULL line.\n");
-		return;
-	}
+	// assert(line);
 	printf("a = %.2f, b = %.2f, c = %.2f\n", line->a, line->b, line->c);
 }
 
-Line* lineFromPoints(const Point *A, const Point *B)
+Line lineFromPoints(const Point *A, const Point *B)
 {
-	if (!A || !B) {
-		// printf("Cannot find a line going through NULL points.\n");
-		return NULL;
-	}
-
-	const double a = B->y - A->y;
-	const double b = A->x - B->x;
-	const double c = B->x * A->y - A->x * B->y;
-	return createLine(a, b, c);
+	// assert(A && B);
+	return (Line) {B->y - A->y, A->x - B->x, determinant(B->x, B->y, A->x, A->y)};
 }
 
 /////////////////////////////////////////////
@@ -202,33 +113,27 @@ Line* lineFromPoints(const Point *A, const Point *B)
 /////////////////////////////////////////////
 
 // Returns the intersection of the two lines if it exists, NULL otherwise:
-Point* linesIntersection(const Line *line1, const Line *line2)
+bool linesIntersection(const Line *line1, const Line *line2, Point *p)
 {
-	if (!line1 || !line2)
-		return NULL;
-
+	// assert(line1 && line2);
 	const double a1 = line1->a, b1 = line1->b, c1 = line1->c;
 	const double a2 = line2->a, b2 = line2->b, c2 = line2->c;
 	const double det = determinant(a1, b1, a2, b2);
 
 	if (epsilonEquality(det, 0.)) {
 		// printf("Lines don't intersect, or are equal.\n");
-		return NULL;
+		return false;
 	}
 
-	const double interX = (b1 * c2 - b2 * c1) / det;
-	const double interY = (a2 * c1 - a1 * c2) / det;
-	return createPoint(interX, interY);
+	p->x = (b1 * c2 - b2 * c1) / det;
+	p->y = (a2 * c1 - a1 * c2) / det;
+	return true;
 }
 
 // Checks if the given point is in the half plane defined by a line and another point:
 int isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, const Line *line)
 {
-	if (!point_test || !point_ref || !line) {
-		printf("Cannot do a domain check, invalid arguments.\n");
-		return 0;
-	}
-
+	// assert(point_test && point_ref && line);
 	const int sign = line->a * point_ref->x + line->b * point_ref->y + line->c >= 0. ? 1 : -1;
 	return sign * (line->a * point_test->x + line->b * point_test->y + line->c) >= 0.;
 }
@@ -238,8 +143,7 @@ int isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, con
 // 1 if it is after the end, and 0 if the point is inside the segment.
 int pointInsideSegment(const Point *A, const Segment *segment)
 {
-	const Point *start = segment->start;
-	const Point *end   = segment->end;
+	const Point *start = segment->start, *end = segment->end;
 	const double dirTo_end_X = end->x - start->x;
 	const double dirTo_end_Y = end->y - start->y;
 	const double dirTo_A_X = A->x - start->x;
@@ -286,15 +190,21 @@ int pointInsideSegment(const Point *A, const Segment *segment)
 /////////////////////////////////////////////
 
 // Returns true if there is a non trivial intersection.
-bool segmentsIntersection(const Segment *segments_1, const Segment *segments_2)
+bool segmentsIntersection(const Segment *segment_1, const Segment *segment_2)
 {
-	Line *l1 = lineFromPoints(segments_1->start, segments_1->end);
-	Line *l2 = lineFromPoints(segments_2->start, segments_2->end);
-	Point *p = linesIntersection(l1, l2);
-	const bool result = p && pointInsideSegment(p, segments_1) == 0 && pointInsideSegment(p, segments_2) == 0;
-	free(p);
-	free(l1);
-	free(l2);
-	return result;
+	Point p = {0};
+	const Line l1 = lineFromPoints(segment_1->start, segment_1->end);
+	const Line l2 = lineFromPoints(segment_2->start, segment_2->end);
+	const bool res = linesIntersection(&l1, &l2, &p);
+
+	// printPoint(p);
+	// Point *A = segment_1->start, *B = segment_1->end;
+	// Point *C = segment_2->start, *D = segment_2->end;
+	// Point BmA = {B->x - A->x, B->y - A->y}, DmC = {D->x - C->x, D->y - D->x};
+	// printf("det: %.4f\n", detFromPoints(&BmA, &DmC));
+	// const double xx = (detFromPoints(C, D) - detFromPoints(A, &DmC)) / detFromPoints(&BmA, &DmC);
+	// printf("%.4f\n", xx);
+
+	return res && pointInsideSegment(&p, segment_1) == 0 && pointInsideSegment(&p, segment_2) == 0;
 }
 // TODO: optimize this function?
