@@ -21,9 +21,9 @@
 // Graphic settings:
 #define WINDOW_WIDTH  (1200)
 #define WINDOW_HEIGHT (1000)
-#define POINT_SIZE      (8)
-#define DRAW_SCALE   (100.) // TODO: improve on this.
-#define FONT_SIZE      (30)
+#define POINT_SIZE       (6)
+#define FRAME_MARGIN  (0.25) // should be between 0. and 0.5
+#define FONT_SIZE       (30)
 #define QUIT_KEY_1 (SDLK_ESCAPE)
 #define QUIT_KEY_2 (SDLK_q)
 
@@ -38,11 +38,13 @@
 #include "rng32.h"
 #define rng_type rng32
 #define rng_init rng32_init
+#define rng_int  rng32_nextInt
 #define rng_real rng32_nextFloat
 #else
 #include "rng64.h"
 #define rng_type rng64
 #define rng_init rng64_init
+#define rng_int  rng64_nextInt
 #define rng_real rng64_nextDouble
 #endif
 

@@ -30,6 +30,19 @@ typedef struct
 
 // TODO: inline short functions
 
+#define NO (-1) // must not be in [0, N_SIDES-1]
+
+typedef struct
+{
+	int i, j;
+} Origin;
+// Here, the origin (i, j) represents:
+// - point i of first polygon if j = NO
+// - point j of second polygon if i = NO
+// - else, a single point on the intersection of segments [i, i+1] and [j, j+1] (modulo N_SIDES)
+
+bool originsLinked(Origin o1, Origin o2);
+
 /////////////////////////////////////////////
 // Utilities:
 /////////////////////////////////////////////
@@ -40,6 +53,10 @@ bool epsilonEquality(double x, double y);
 
 // Checks if x < y, short of EPSILON:
 bool epsilonStrInequality(double x, double y);
+
+// Checks if x <= y, short of EPSILON.
+// Note that this fuzzy inequality does not describe an actual order.
+bool epsilonInequality(double x, double y);
 
 /////////////////////////////////////////////
 // Points:
@@ -101,7 +118,7 @@ bool isPointInSegment(const Point *A, const Segment *segment, bool strict);
 
 /////////////////////////////////////////////
 
-// Returns true if the segments intersect in a point, and if so fills it.
+// Returns true if the segments intersect in a single point, and if so fills it.
 // If strict is true, the intersection must not be on any segment bounds.
 bool segmentsIntersection(const Segment *segment1, const Segment *segment2, bool strict, Point *p);
 
@@ -113,6 +130,10 @@ double area2(const Point *A, const Point *B, const Point *C);
 bool isInPolygon(const Point *p, const Point polygonPoints[N_SIDES], const Line polygonlines[N_SIDES]);
 
 bool isPointInArray(const Point *p, const Point *array, int length);
+
+void swapPoint(Point *A, Point *B);
+
+Point getCenter(const Point *points, int length);
 
 double intersectionArea(const Polygon *pol1, const Polygon *pol2);
 

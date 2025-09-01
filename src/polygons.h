@@ -33,5 +33,6 @@ void findErrorRatio(const Polygon *polArray, int n_polygons, double *side, doubl
 double relative_error(double ref, double x);
 bool checkConfiguration(const Polygon *polArray, int n_polygons);
 bool intersects(const Polygon *pol1, const Polygon *pol2);
+double configurationQuality(const Polygon *polArray, int n_polygons);
 
 #endif

@@ -152,3 +152,17 @@ bool intersects(const Polygon *pol1, const Polygon *pol2)
 	}
 	return false;
 }
+
+// The lower the score, the higher the quality.
+// The score actually is an upper bound of the total intersection area,
+// indeed some pairwise intersection area may be counted more than once.
+double configurationQuality(const Polygon *polArray, int n_polygons)
+{
+	double score = 0.;
+	for (int i = 0; i < n_polygons; ++i) {
+		for (int j = i+1; j < n_polygons; ++j) {
+			score += intersectionArea(polArray + i, polArray + j);
+		}
+	}
+	return score;
+}

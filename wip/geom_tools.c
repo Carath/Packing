@@ -153,8 +153,12 @@ bool isPointInHalfPlane(const Point *point_test, const Point *point_ref, const L
 {
 	// assert(point_test && point_ref && line);
 	const int sign = line->a * point_ref->x + line->b * point_ref->y + line->c >= 0. ? 1 : -1;
-	// return sign * (line->a * point_test->x + line->b * point_test->y + line->c) >= (strict ? EPSILON : 0.); // unstable
+
+	// return sign * (line->a * point_test->x + line->b * point_test->y + line->c) >= (strict ? EPSILON : 0.); // bugged
 	return sign * (line->a * point_test->x + line->b * point_test->y + line->c) >= (strict ? EPSILON : -EPSILON); // stable
+
+
+	// stability issues?
 }
 
 // Checks if the given point is in the segment. If strict
@@ -250,6 +254,11 @@ Point getCenter(const Point *points, int length)
 	return center;
 }
 
+
+
+
+
+
 // First point is fixed. Then step by step, the next point will
 // be the closest to the current one among the remaining ones.
 void rearrange(Point *array, int length)
@@ -269,7 +278,7 @@ void rearrange(Point *array, int length)
 	}
 }
 
-// Another try:
+// ...
 void rearrange_2(Point *array, int length)
 {
 	double d2_min = INFINITY;
@@ -302,6 +311,65 @@ void rearrange_2(Point *array, int length)
 		swapPoint(array + i+1, array + idxmin);
 	}
 }
+
+typedef struct
+{
+	double proximity;
+	int index;
+} Node;
+
+// Insertion sort by increasing proximity:
+static void sortNodes(Node *nodes, int size)
+{
+	for (int i = 1; i < size; ++i) {
+		const Node ref = nodes[i];
+		int j = i;
+		// for (; j > 0 && nodes[j-1].proximity > ref.proximity; --j)
+		for (; j > 0 && epsilonStrInequality(ref.proximity, nodes[j-1].proximity); --j) // more stable
+			nodes[j] = nodes[j-1];
+		nodes[j] = ref;
+	}
+}
+
+// carjacking the proximity, by the angle's sine:
+void rearrange_sin(Point *points, int length)
+{
+	// for (int i = 0; i < length; ++i)
+	// 	printPoint(points + i);
+
+	const Point center = getCenter(points, length);
+
+	Node *nodes = (Node*) calloc(length-1, sizeof(Node));
+	const Point AO = vector(points, &center);
+	const double dAO = distance(points, &center);
+
+	for (int i = 1; i < length; ++i) {
+		const Point AB = vector(points, points + i);
+		const double dAB = distance(points, points + i);
+		const double det = detFromPoints(&AO, &AB);
+		const double angleSine = det / (dAO * dAB);
+		// assert(-1. <= angleSine && angleSine <= 1.);
+		assert(epsilonInequality(-1., angleSine) && epsilonInequality(angleSine, 1.));
+		nodes[i-1] = (Node) {angleSine, i};
+	}
+
+	sortNodes(nodes, length-1); // increasing or decreasing order.
+
+	Point *copy = (Point*) calloc(length, sizeof(Point));
+	memcpy(copy, points, length * sizeof(Point));
+	for (int i = 1; i < length; ++i)
+		points[i] = copy[nodes[i-1].index];
+
+	// for (int i = 0; i < length-1; ++i)
+	// 	printf("Node: (%d, %g)\n", nodes[i].index, nodes[i].proximity);
+	// printf("\n");
+
+	free(copy);
+	free(nodes);
+}
+// Note: the sine approach fails for it is extremely sensitive to numerical instabilities.
+// It requires to sort the angles sine, yet comparison are up to EPSILON so no proper order
+// can be used to categorically compare those values...
 
 bool rearrange_halfPlane(Point *points, int length)
 {
@@ -417,68 +485,10 @@ bool rearrange_intersection(Point *points, int length)
 	// free(copy);
 	return true;
 }
-// Not working yet.
+// Not working yet...
 
-typedef struct
-{
-	double proximity;
-	int index;
-} Node;
 
-// Insertion sort by increasing proximity:
-static void sortNodes(Node *nodes, int size)
-{
-	for (int i = 1; i < size; ++i) {
-		const Node ref = nodes[i];
-		int j = i;
-		// for (; j > 0 && nodes[j-1].proximity > ref.proximity; --j)
-		for (; j > 0 && epsilonStrInequality(ref.proximity, nodes[j-1].proximity); --j) // more stable
-			nodes[j] = nodes[j-1];
-		nodes[j] = ref;
-	}
-}
-
-// carjacking the proximity, by the angle's sine:
-void rearrange_sin(Point *points, int length)
-{
-	// for (int i = 0; i < length; ++i)
-	// 	printPoint(points + i);
-
-	const Point center = getCenter(points, length);
-
-	Node *nodes = (Node*) calloc(length-1, sizeof(Node));
-	const Point AO = vector(points, &center);
-	const double dAO = distance(points, &center);
-
-	for (int i = 1; i < length; ++i) {
-		const Point AB = vector(points, points + i);
-		const double dAB = distance(points, points + i);
-		const double det = detFromPoints(&AO, &AB);
-		const double angleSine = det / (dAO * dAB);
-		// assert(-1. <= angleSine && angleSine <= 1.);
-		assert(epsilonInequality(-1., angleSine) && epsilonInequality(angleSine, 1.));
-		nodes[i-1] = (Node) {angleSine, i};
-	}
-
-	sortNodes(nodes, length-1); // increasing or decreasing order.
-
-	Point *copy = (Point*) calloc(length, sizeof(Point));
-	memcpy(copy, points, length * sizeof(Point));
-	for (int i = 1; i < length; ++i)
-		points[i] = copy[nodes[i-1].index];
-
-	// for (int i = 0; i < length-1; ++i)
-	// 	printf("Node: (%d, %g)\n", nodes[i].index, nodes[i].proximity);
-	// printf("\n");
-
-	free(copy);
-	free(nodes);
-}
-// Note: the sine approach fails for it is extremely sensitive to numerical instabilities.
-// It requires to sort the angles sine, yet comparison are up to EPSILON so no proper order
-// can be used to categorically compare those values.
-
-// Trying to match closest pairs.
+// ...
 void betterArrangement(Point *points, int length)
 {
 	const int size = length * length;
@@ -492,6 +502,7 @@ void betterArrangement(Point *points, int length)
 
 	// Point *buffer = (Point*) calloc(2 * length, sizeof(Point));
 	int *buffer = (int*) calloc(2 * length, sizeof(int));
+
 
 	#define EMPTY_VALUE (-1.) // must be < 0.
 	for (int k = 0; k < size; ++k)
@@ -537,8 +548,8 @@ void betterArrangement(Point *points, int length)
 			// --nbObjRestant; --nbObjPrecRestant;
 
 			// i, j: ok
-			// swapPoint(points + i, points + nbMatchFound++); // side effect.
-			// swapPoint(points + j, points + nbMatchFound++); // side effect.
+			// swapPoint(points + i, points + nbMatchFound++); // side effect...
+			// swapPoint(points + j, points + nbMatchFound++); // side effect...
 			// points[nbMatchFound++] = copy[i];
 			// points[nbMatchFound++] = copy[j];
 			// does not work, will overflow points!!!!
@@ -560,6 +571,7 @@ void betterArrangement(Point *points, int length)
 	// 	points[k]   = buffer[2*k];
 	// 	points[k+1] = buffer[2*k+1];
 	// }
+
 
 	int idx1 = buffer[0], idx2 = buffer[1];
 	points[0] = copy[idx1];
@@ -585,6 +597,8 @@ void betterArrangement(Point *points, int length)
 	// free(objetsSet);
 	free(nodes);
 }
+
+
 
 #include "drawing.h" // for debugging
 
@@ -613,11 +627,11 @@ int findIntersection(const Polygon *pol1, const Polygon *pol2, Point allIntersec
 	// 2*N_SIDES should be the max number of points of any intersection:
 	int idx = 0;
 
-	// N.B: isInPolygon does not check if it is inside the interior. But that is actually ok.
+	// N.B: isInPolygon does not check if it is inside the interior... But that is actually ok.
 
 	////////////////
 
-	// Checking for corners in the intersection:
+	// ...
 	for (int i = 0; i < N_SIDES; ++i) {
 		// if (isInPolygon(pol1->points + i, pol2->points, lines2)) // corners are accepted
 		if (isInPolygon(pol1->points + i, pol2->points, lines2) && !isPointInArray(pol1->points + i, allIntersections, idx))
@@ -627,7 +641,7 @@ int findIntersection(const Polygon *pol1, const Polygon *pol2, Point allIntersec
 			allIntersections[idx++] = pol2->points[i];
 	}
 
-	// Checking for segments intersections:
+	// ...
 	for (int i = 0; i < N_SIDES; ++i) {
 		for (int j = 0; j < N_SIDES; ++j) {
 			Point p = {0};
@@ -639,6 +653,7 @@ int findIntersection(const Polygon *pol1, const Polygon *pol2, Point allIntersec
 
 	// Are redondancies really problematic anyways?
 	// Order of the last two blocks could be commuted with some slight adjustments.
+
 
 	if (idx < 3) // no intersection or zero area.
 		return 0.;
@@ -664,9 +679,26 @@ int findIntersection(const Polygon *pol1, const Polygon *pol2, Point allIntersec
 	return idx;
 }
 
-inline Origin newOrigin(int i, int j)
+
+#define NO (-1) // must not be in [0, N_SIDES-1]
+
+typedef struct
 {
-	return (Origin) {i, j};
+	int i, j;
+} Origin;
+// Here, the origin (i, j) represents:
+// - point i of first polygon if j = NO
+// - point j of second polygon if i = NO
+// - else, a single point on the intersection of segments [i, i+1] and [j, j+1] (modulo N_SIDES)
+
+inline int next(int k)
+{
+	return (k+1) % N_SIDES;
+}
+
+inline int prev(int k)
+{
+	return (k-1+N_SIDES) % N_SIDES;
 }
 
 inline bool originEquality(Origin o1, Origin o2)
@@ -674,24 +706,10 @@ inline bool originEquality(Origin o1, Origin o2)
 	return o1.i == o2.i && o1.j == o2.j;
 }
 
-// next() and prev() are inverse of each other when k != NO:
-
-// This should not be called on NO.
-inline int next(int k)
+inline Origin newOrigin(int i, int j)
 {
-	// assert(0 <= k && k < N_SIDES); // detecting NO
-	return (k+1) % N_SIDES;
+	return (Origin) {i, j};
 }
-
-// This should not be called on NO.
-inline int prev(int k)
-{
-	// assert(0 <= k && k < N_SIDES); // detecting NO
-	return (k-1+N_SIDES) % N_SIDES;
-}
-
-// Note: all versions originsLinked() are bugged as of now.
-// Indeed, prev() and next() can be called on NO, which should never happen.
 
 // Natural version:
 bool originsLinked(Origin o1, Origin o2)
@@ -723,36 +741,6 @@ bool originsLinked(Origin o1, Origin o2)
 // 	return o2.j == o1.j || o2.i == o1.i || testi || testj;
 // }
 
-// // WRONG checksum.
-// bool originsLinked(Origin o1, Origin o2)
-// {
-// 	const bool testi = o2.i == NO ? o2.j == next(o1.j) : o2.j == o1.j;
-// 	const bool testj = o2.j == NO ? o2.i == next(o1.i) : o2.i == o1.i;
-// 	if (o1.i == NO)
-// 		return o1.j == next(o2.j) || testi;
-// 	if (o1.j == NO)
-// 		return o1.i == next(o2.i) || testj;
-// 	return o2.j == o1.j || o2.i == o1.i || testi || testj;
-// }
-
-// // // WRONG checksum.
-// bool originsLinked(Origin o1, Origin o2)
-// {
-// 	const int a = o2.i == NO;
-// 	const int A = o2.j == NO;
-// 	const int b = o2.i == o1.i;
-// 	const int B = o2.j == o1.j;
-// 	const int c = o2.i == next(o1.i);
-// 	const int C = o2.j == next(o1.j);
-
-// 	// const int d = o1.i == next(o2.i);
-// 	// const int D = o1.j == next(o2.j);
-// 	const int d = o2.i == prev(o1.i);
-// 	const int D = o2.j == prev(o1.j);
-
-// 	return ((a & (C | D)) | (~a & A & (c | d)) | (~a & ~A & (b | B))) & 1;
-// }
-
 int findIntersection_2(const Polygon *pol1, const Polygon *pol2, Point allIntersections[2*N_SIDES])
 {
 	Line lines1[N_SIDES] = {0};
@@ -772,13 +760,15 @@ int findIntersection_2(const Polygon *pol1, const Polygon *pol2, Point allInters
 	// 2*N_SIDES should be the max number of points of any intersection:
 	int idx = 0;
 
-	// N.B: isInPolygon does not check if it is inside the interior. But that is actually ok.
+	// N.B: isInPolygon does not check if it is inside the interior... But that is actually ok.
 
 	////////////////
 
 	Origin origins[2*N_SIDES] = {0};
 
-	// Checking for corners in the intersection. First polygon first:
+	// ...
+
+	// First polygon first
 	for (int i = 0; i < N_SIDES; ++i) {
 		if (isInPolygon(pol1->points + i, pol2->points, lines2)) { // corners are accepted
 			allIntersections[idx] = pol1->points[i];
@@ -787,7 +777,7 @@ int findIntersection_2(const Polygon *pol1, const Polygon *pol2, Point allInters
 		}
 	}
 
-	// Checking for corners in the intersection. Second polygon:
+	// Then the second:
 	for (int i = 0; i < N_SIDES; ++i) {
 		// if (isInPolygon(pol2->points + i, pol1->points, lines1)) { // corners are accepted. Check redondancies here?
 		if (isInPolygon(pol2->points + i, pol1->points, lines1) && !isPointInArray(pol2->points + i, allIntersections, idx)) {
@@ -797,7 +787,7 @@ int findIntersection_2(const Polygon *pol1, const Polygon *pol2, Point allInters
 		}
 	}
 
-	// Checking for segments intersections:
+	// ...
 	for (int i = 0; i < N_SIDES; ++i) {
 		for (int j = 0; j < N_SIDES; ++j) {
 			Point p = {0};

@@ -10,9 +10,19 @@ SDL_Color Lime = {0, 255, 0, 255};
 SDL_Color Yellow = {255, 255, 0, 255};
 // SDL colors cannot be const due to an SDLA limitation.
 
-Point pointFromCoord(double xOffset, double yOffset, double x, double y)
+Point projection(Point p, Point offset, double scale)
 {
-	return (Point) { DRAW_SCALE * (x + xOffset), DRAW_SCALE * (y + yOffset)};
+	return (Point) {offset.x + p.x * scale, offset.y + p.y * scale};
+}
+
+void computeProjection(Solution sol, Point *offset, double *scale)
+{
+	const Box box = findBoundary(sol.polArray, sol.n_polygons);
+	const double srcSize  = fmax(box.xmax - box.xmin, box.ymax - box.ymin);
+	const double destSize = fmin(WINDOW_WIDTH, WINDOW_HEIGHT) * (1. - 2. * FRAME_MARGIN);
+	*scale = srcSize < EPSILON ? 1. : destSize / srcSize;
+	offset->x = (WINDOW_WIDTH  - *scale * (box.xmin + box.xmax))/2.;
+	offset->y = (WINDOW_HEIGHT - *scale * (box.ymin + box.ymax))/2.;
 }
 
 void drawPoint(const Point *point, const SDL_Color *color)
@@ -41,12 +51,17 @@ void drawSegment(const Segment *segment, const SDL_Color *color)
 	}
 }
 
+void drawPolygonalChain(const Point *points, int length, bool closed)
+{
+	for (int i = 0; i < length-!closed; ++i)
+		drawSegment(&(Segment) {points + i, points + (i+1) % length}, &Yellow);
+	for (int i = 0; i < length; ++i)
+		drawPoint(points + i, &Lime);
+}
+
 void drawPolygon(const Polygon *polygon)
 {
-	for (int j = 0; j < N_SIDES; ++j)
-		drawSegment(&(Segment) {polygon->points + j, polygon->points + (j+1) % N_SIDES}, &Yellow);
-	for (int j = 0; j < N_SIDES; ++j)
-		drawPoint(polygon->points + j, &Lime);
+	drawPolygonalChain(polygon->points, N_SIDES, true);
 }
 
 void animation(Solution sol)
@@ -57,14 +72,15 @@ void animation(Solution sol)
 		SDLA_ClearWindow(NULL);
 
 		// 'sol' could be updated here...
-		const Box box = findBoundary(sol.polArray, sol.n_polygons);
-		const double xOffset = (WINDOW_WIDTH  / DRAW_SCALE - (box.xmax - box.xmin)) / 2. - box.xmin;
-		const double yOffset = (WINDOW_HEIGHT / DRAW_SCALE - (box.ymax - box.ymin)) / 2. - box.ymin;
+
+		Point offset = {0}; double scale = 0.;
+		computeProjection(sol, &offset, &scale);
+
 		for (int i = 0; i < sol.n_polygons; ++i) {
 			const Point *points = sol.polArray[i].points;
-			Polygon projectedPolygon = {0}; // center left to (0, 0)
+			Polygon projectedPolygon = {0}; // 'center' left to (0, 0)
 			for (int j = 0; j < N_SIDES; ++j)
-				projectedPolygon.points[j] = pointFromCoord(xOffset, yOffset, points[j].x, points[j].y);
+				projectedPolygon.points[j] = projection(points[j], offset, scale);
 			drawPolygon(&projectedPolygon);
 		}
 		if (font) {

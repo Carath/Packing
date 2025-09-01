@@ -5,6 +5,8 @@
 #include "polygons.h"
 
 Solution init(int n_polygons, rng_type *rng);
+bool optimize_area(Solution *sol, rng_type *rng, int iterationNumber);
+void optimize_sa(Solution *sol, rng_type *rng, int iterationNumber);
 void optimize(Solution *sol, rng_type *rng, int iterationNumber);
 void optimize_2(Solution *sol, rng_type *rng, int iterationNumber);
 
