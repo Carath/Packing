@@ -111,6 +111,9 @@ inline float randomFloat(void) // TODO: add proper, thread-safe, fast RNG.
 	return (float) rand() / RAND_MAX;
 }
 
+// Question: is it faster to apply the mutation on the AB segment,
+// and then regenerate the square with createSquare? This would require
+// disabling the assert if said function, and save 'direc' in the struct.
 void mutation(Square *s)
 {
 	// Rotations are rarely done. Optimization: only apply the
@@ -128,5 +131,6 @@ bool intersects(const Square *s1, const Square *s2)
 	if (distance2(s1->xCenter, s1->yCenter, s2->xCenter, s2->yCenter) >= 8.)
 		return false;
 
-	return false; // TODO
+	// TODO: 16 pairwise segments intersections.
+	return false;
 }
