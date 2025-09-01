@@ -19,6 +19,7 @@ void printSquare(const Square *s);
 void translation(Square *s, double xDelta, double yDelta);
 void rotation(Square *s, double angle);
 void mutation(rng32 *rng, Square *s);
+double findBoundingSize(const Square *sqArray, int n_squares);
 bool intersects(const Square *s1, const Square *s2);
 // bool checkSquare(const Square *s);
 

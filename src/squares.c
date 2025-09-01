@@ -81,6 +81,36 @@ void mutation(rng32 *rng, Square *s)
 	translation(s, STEP_SIZE * rng32_nextFloat(rng), STEP_SIZE * rng32_nextFloat(rng));
 }
 
+double findBoundingSize(const Square *sqArray, int n_squares)
+{
+	double xmin = INFINITY, xmax = -INFINITY, ymin = INFINITY, ymax = -INFINITY;
+	for (int i = 0; i < n_squares; ++i) {
+		xmin = fmin(xmin, sqArray[i].xA);
+		xmin = fmin(xmin, sqArray[i].xB);
+		xmin = fmin(xmin, sqArray[i].xC);
+		xmin = fmin(xmin, sqArray[i].xD);
+
+		ymin = fmin(ymin, sqArray[i].yA);
+		ymin = fmin(ymin, sqArray[i].yB);
+		ymin = fmin(ymin, sqArray[i].yC);
+		ymin = fmin(ymin, sqArray[i].yD);
+
+		xmax = fmax(xmax, sqArray[i].xA);
+		xmax = fmax(xmax, sqArray[i].xB);
+		xmax = fmax(xmax, sqArray[i].xC);
+		xmax = fmax(xmax, sqArray[i].xD);
+
+		ymax = fmax(ymax, sqArray[i].yA);
+		ymax = fmax(ymax, sqArray[i].yB);
+		ymax = fmax(ymax, sqArray[i].yC);
+		ymax = fmax(ymax, sqArray[i].yD);
+	}
+	printf( "xmin: %.3f, xmax: %.3f\n"
+			"ymin: %.3f, ymax: %.3f\n",
+			xmin, xmax, ymin, ymax);
+	return fmax(xmax - xmin, ymax - ymin);
+}
+
 // Only returns true on non-trivial intersections.
 bool intersects(const Square *s1, const Square *s2)
 {

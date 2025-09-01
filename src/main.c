@@ -5,7 +5,6 @@
 #include <time.h>
 #include <assert.h>
 #include "squares.h"
-#include "rng32.h"
 #include "drawing.h"
 
 SDL_Window *window = NULL;
@@ -22,14 +21,18 @@ int main(int argc, char const *argv[])
 	rng32_init(&rng, seed, 0);
 
 	const int n_squares = 17;
-	Square *squares = (Square*) calloc(n_squares, sizeof(Square));
+	const int n_side = (int) sqrtf(n_squares);
+	Square *sqArray = (Square*) calloc(n_squares, sizeof(Square));
 	for (int i = 0; i < n_squares; ++i) {
-		const double x = rng32_nextFloat(&rng), y = rng32_nextFloat(&rng), theta = rng32_nextFloat(&rng);
-		squares[i] = createSquare(x, y, x + cos(theta), y + sin(theta), 1);
-		printSquare(squares + i);
+		// const double x = rng32_nextFloat(&rng), y = rng32_nextFloat(&rng), theta = rng32_nextFloat(&rng);
+		const double x = i / n_side, y = i % n_side, theta = 0.;
+		sqArray[i] = createSquare(x, y, x + cos(theta), y + sin(theta), 1);
+		printSquare(sqArray + i);
 	}
+	const double total_size = findBoundingSize(sqArray, n_squares);
+	printf("Total size: %.3f\n", total_size);
 
-	animation(squares, n_squares);
-	free(squares);
+	animation(sqArray, n_squares);
+	free(sqArray);
 	return 0;
 }

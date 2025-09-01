@@ -39,11 +39,11 @@ void drawSegment(const Segment *segment, const SDL_Color *color)
 	}
 }
 
-void animation(const Square *sqArray, int length)
+void animation(const Square *sqArray, int n_squares)
 {
 	while (1) {
 		SDLA_ClearWindow(NULL);
-		for (int i = 0; i < length; ++i) {
+		for (int i = 0; i < n_squares; ++i) {
 			Point A = pointFromCoord(sqArray[i].xA, sqArray[i].yA);
 			Point B = pointFromCoord(sqArray[i].xB, sqArray[i].yB);
 			Point C = pointFromCoord(sqArray[i].xC, sqArray[i].yC);
