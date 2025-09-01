@@ -53,18 +53,14 @@ void animation(Solution sol)
 		const double xOffset = (WINDOW_WIDTH  / DRAW_SCALE - (box.xmax - box.xmin)) / 2. - box.xmin;
 		const double yOffset = (WINDOW_HEIGHT / DRAW_SCALE - (box.ymax - box.ymin)) / 2. - box.ymin;
 		for (int i = 0; i < sol.n_squares; ++i) {
-			Point A = pointFromCoord(xOffset, yOffset, sol.sqArray[i].xA, sol.sqArray[i].yA);
-			Point B = pointFromCoord(xOffset, yOffset, sol.sqArray[i].xB, sol.sqArray[i].yB);
-			Point C = pointFromCoord(xOffset, yOffset, sol.sqArray[i].xC, sol.sqArray[i].yC);
-			Point D = pointFromCoord(xOffset, yOffset, sol.sqArray[i].xD, sol.sqArray[i].yD);
-			drawSegment(&(Segment) {&A, &B}, &Yellow);
-			drawSegment(&(Segment) {&B, &C}, &Yellow);
-			drawSegment(&(Segment) {&C, &D}, &Yellow);
-			drawSegment(&(Segment) {&D, &A}, &Yellow);
-			drawPoint(&A, &Lime);
-			drawPoint(&B, &Lime);
-			drawPoint(&C, &Lime);
-			drawPoint(&D, &Lime);
+			const Point *p = sol.sqArray[i].points;
+			Point projectedPoints[N_SIDES] = {0};
+			for (int j = 0; j < N_SIDES; ++j)
+				projectedPoints[j] = pointFromCoord(xOffset, yOffset, p[j].x, p[j].y);
+			for (int j = 0; j < N_SIDES; ++j)
+				drawSegment(&(Segment) {projectedPoints + j, projectedPoints + (j+1)%N_SIDES}, &Yellow);
+			for (int j = 0; j < N_SIDES; ++j)
+				drawPoint(projectedPoints + j, &Lime);
 		}
 		if (font) {
 			char bufferStr[100] = {0};

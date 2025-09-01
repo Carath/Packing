@@ -6,60 +6,47 @@
 
 // static const double twoPi = 6.28318530718;
 
-Square createSquare(double xA, double yA, double xB, double yB, Direction d)
+Square createSquare(double xA, double yA, double xB, double yB, Direction d) // specific to squares. TODO!
 {
 	assert(fabs(distance2(xA, yA, xB, yB) - 1.) < EPSILON);
+	const double xC = xB - d * (yB-yA), yC = yB + d * (xB-xA);
 	Square s = {0};
-	s.xA = xA, s.yA = yA;
-	s.xB = xB, s.yB = yB;
-	s.xC = xB - d * (yB-yA);
-	s.yC = yB + d * (xB-xA);
-	s.xD = xA + s.xC - xB;
-	s.yD = yA + s.yC - yB;
-	s.xCenter = (s.xA + s.xC) / 2.;
-	s.yCenter = (s.yA + s.yC) / 2.;
+	s.points[0] = (Point) {xA, yA};
+	s.points[1] = (Point) {xB, yB};
+	s.points[2] = (Point) {xC, yC};
+	s.points[3] = (Point) {xA + xC - xB, yA + yC - yB};
+	s.center = (Point) {(xA + xC) / 2., (yA + yC) / 2.};
 	return s;
 }
 
 void printSquare(const Square *s)
 {
-	printf( "xA = %.3f, yA = %.3f\nxB = %.3f, yB = %.3f\n"
-			"xC = %.3f, yC = %.3f\nxD = %.3f, yD = %.3f\n",
-			s->xA, s->yA, s->xB, s->yB, s->xC, s->yC, s->xD, s->yD);
+	for (int i = 0; i < N_SIDES; ++i)
+		printf("Point %d: (%.3f, %.3f)\n", i, s->points[i].x, s->points[i].y);
 }
 
 void translation(Square *s, double xDelta, double yDelta)
 {
-	s->xA += xDelta;
-	s->xB += xDelta;
-	s->xC += xDelta;
-	s->xD += xDelta;
-	s->yA += yDelta;
-	s->yB += yDelta;
-	s->yC += yDelta;
-	s->yD += yDelta;
-	s->xCenter += xDelta;
-	s->yCenter += yDelta;
-}
-
-// Useful to update two variables while preventing side effects!
-static inline void replace4Rot(double *x, double *y, double xCenter,
-	double yCenter, double co, double si)
-{
-	const double xDelta = *x - xCenter, yDelta = *y - yCenter;
-	*x = co * xDelta - si * yDelta + xCenter;
-	*y = si * xDelta + co * yDelta + yCenter;
+	for (int i = 0; i < N_SIDES; ++i) {
+		s->points[i].x += xDelta;
+		s->points[i].y += yDelta;
+	}
+	s->center.x += xDelta;
+	s->center.y += yDelta;
+	// Last two lines could be part of the loop if 'center' was the array's last spot.
 }
 
 // Rotation center is square center.
 void rotation(Square *s, double angle)
 {
 	const double co = cos(angle), si = sin(angle);
-	replace4Rot(&(s->xA), &(s->yA), s->xCenter, s->yCenter, co, si);
-	replace4Rot(&(s->xB), &(s->yB), s->xCenter, s->yCenter, co, si);
-	replace4Rot(&(s->xC), &(s->yC), s->xCenter, s->yCenter, co, si);
-	replace4Rot(&(s->xD), &(s->yD), s->xCenter, s->yCenter, co, si);
-	// No need to update the center.
+	for (int i = 0; i < N_SIDES; ++i) {
+		const double xDelta = s->points[i].x - s->center.x;
+		const double yDelta = s->points[i].y - s->center.y;
+		s->points[i].x = co * xDelta - si * yDelta + s->center.x;
+		s->points[i].y = si * xDelta + co * yDelta + s->center.y;
+	}
+	// No need to update the center for this one.
 }
 
 // Question: is it faster to apply the mutation on the AB segment,
@@ -88,25 +75,13 @@ Box findBoundary(const Square *sqArray, int n_squares)
 {
 	double xmin = INFINITY, xmax = -INFINITY, ymin = INFINITY, ymax = -INFINITY;
 	for (int i = 0; i < n_squares; ++i) {
-		xmin = fmin(xmin, sqArray[i].xA);
-		xmin = fmin(xmin, sqArray[i].xB);
-		xmin = fmin(xmin, sqArray[i].xC);
-		xmin = fmin(xmin, sqArray[i].xD);
 
-		ymin = fmin(ymin, sqArray[i].yA);
-		ymin = fmin(ymin, sqArray[i].yB);
-		ymin = fmin(ymin, sqArray[i].yC);
-		ymin = fmin(ymin, sqArray[i].yD);
-
-		xmax = fmax(xmax, sqArray[i].xA);
-		xmax = fmax(xmax, sqArray[i].xB);
-		xmax = fmax(xmax, sqArray[i].xC);
-		xmax = fmax(xmax, sqArray[i].xD);
-
-		ymax = fmax(ymax, sqArray[i].yA);
-		ymax = fmax(ymax, sqArray[i].yB);
-		ymax = fmax(ymax, sqArray[i].yC);
-		ymax = fmax(ymax, sqArray[i].yD);
+		for (int j = 0; j < N_SIDES; ++j) {
+			xmin = fmin(xmin, sqArray[i].points[j].x);
+			ymin = fmin(ymin, sqArray[i].points[j].y);
+			xmax = fmax(xmax, sqArray[i].points[j].x);
+			ymax = fmax(ymax, sqArray[i].points[j].y);
+		}
 	}
 	return (Box) {xmin, xmax, ymin, ymax};
 }
@@ -141,37 +116,21 @@ bool checkConfiguration(const Square *sqArray, int n_squares)
 bool intersects(const Square *s1, const Square *s2)
 {
 	// Huge optimization to not consider far away squares. Min squared distance is 2c².
-	if (distance2(s1->xCenter, s1->yCenter, s2->xCenter, s2->yCenter) >= 2.)
+	if (distance2(s1->center.x, s1->center.y, s2->center.x, s2->center.y) >= 2.)
 		return false;
 
-	Point points_1[4] = {
-		(Point) {s1->xA, s1->yA},
-		(Point) {s1->xB, s1->yB},
-		(Point) {s1->xC, s1->yC},
-		(Point) {s1->xD, s1->yD},
-	};
-	Point points_2[4] = {
-		(Point) {s2->xA, s2->yA},
-		(Point) {s2->xB, s2->yB},
-		(Point) {s2->xC, s2->yC},
-		(Point) {s2->xD, s2->yD},
-	};
-	const Segment segments_1[4] = {
-		(Segment) {points_1    , points_1 + 1},
-		(Segment) {points_1 + 1, points_1 + 2},
-		(Segment) {points_1 + 2, points_1 + 3},
-		(Segment) {points_1 + 3, points_1    }
-	};
-	const Segment segments_2[4] = {
-		(Segment) {points_2    , points_2 + 1},
-		(Segment) {points_2 + 1, points_2 + 2},
-		(Segment) {points_2 + 2, points_2 + 3},
-		(Segment) {points_2 + 3, points_2    },
-	};
+	Point *points1 = (Point*) s1->points;
+	Point *points2 = (Point*) s2->points;
+	Segment segments_1[N_SIDES] = {0};
+	Segment segments_2[N_SIDES] = {0};
+	for (int i = 0; i < N_SIDES; ++i) {
+		segments_1[i] = (Segment) {points1 + i, points1 + (i+1)%N_SIDES};
+		segments_2[i] = (Segment) {points2 + i, points2 + (i+1)%N_SIDES};
+	}
 
 	// 16 pairwise segments intersections.
-	for (int i = 0; i < 4; ++i) {
-		for (int j = 0; j < 4; ++j) {
+	for (int i = 0; i < N_SIDES; ++i) {
+		for (int j = 0; j < N_SIDES; ++j) {
 			if (segmentsNonTrivialIntersection(segments_1 + i, segments_2 + j))
 				return true;
 		}

@@ -22,8 +22,8 @@ typedef struct
 
 typedef struct
 {
-	double xA, yA, xB, yB, xC, yC, xD, yD;
-	double xCenter, yCenter;
+	Point points[N_SIDES];
+	Point center; // put this as the array last spot?
 } Square; // square length = 1.
 
 // TODO: inline short functions
@@ -99,7 +99,7 @@ bool segmentsNonTrivialIntersection(const Segment *segment_1, const Segment *seg
 // Returns the squared area of the triangle ABC, using Heron's formula:
 double area2(const Point *A, const Point *B, const Point *C);
 
-bool isInSquare(const Point *p, const Point squarePoints[4], const Line squarelines[4]);
+bool isInSquare(const Point *p, const Point squarePoints[N_SIDES], const Line squarelines[N_SIDES]);
 
 bool isPointInArray(const Point *p, const Point *array, int length);
 

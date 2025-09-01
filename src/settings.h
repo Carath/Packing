@@ -1,6 +1,8 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#define N_SIDES (4)
+
 // Squares functions settings:
 #define EPSILON        ((double) 1e-6)
 #define INIT_MARGIN    ((double) 0.50)

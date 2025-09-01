@@ -143,14 +143,3 @@ void optimize_2(Solution *sol, rng32 *rng, int iterationNumber)
 	for (int k = 0; k < NEIGHBOURHOOD; ++k)
 		free(buffer[k]);
 }
-
-// TODO:
-// - save good quality configurations.
-// - add other init positions?
-
-// Issues:
-// - Somehow, clang gives different results even w/o any optimization...
-
-// TODO (later):
-// - refactor the square struct?
-// - generalize from squares to regular polygons?
