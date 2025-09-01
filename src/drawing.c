@@ -6,9 +6,8 @@
 extern SDL_Window *window;
 extern SDL_Renderer *renderer;
 static SDL_Event event = {0};
-SDL_Color Lime = {0, 255, 0, 255};
-SDL_Color Yellow = {255, 255, 0, 255};
-// SDL colors cannot be const due to an SDLA limitation.
+const SDL_Color Lime = {0, 255, 0, 255};
+const SDL_Color Yellow = {255, 255, 0, 255};
 
 Point projection(Point p, Point offset, double scale)
 {

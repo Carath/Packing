@@ -23,4 +23,3 @@
 - improve the search algorithm, make it less greedy?
 - improve on the mutation operator. More directed?
 - start for a more structured configuration, add some knowledge?
-- SDLA update?
