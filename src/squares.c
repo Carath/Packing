@@ -40,10 +40,13 @@ void translation(Square *s, double xDelta, double yDelta)
 	s->yB += yDelta;
 	s->yC += yDelta;
 	s->yD += yDelta;
+	s->xCenter += xDelta;
+	s->yCenter += yDelta;
 }
 
 // Useful to update two variables while preventing side effects!
-inline void replace4Rot(double *x, double *y, double xCenter, double yCenter, double co, double si)
+inline void replace4Rot(double *x, double *y, double xCenter,
+	double yCenter, double co, double si)
 {
 	const double xDelta = *x - xCenter, yDelta = *y - yCenter;
 	*x = co * xDelta - si * yDelta + xCenter;
@@ -53,12 +56,12 @@ inline void replace4Rot(double *x, double *y, double xCenter, double yCenter, do
 // Rotation center is square center.
 void rotation(Square *s, double angle)
 {
-
 	const double co = cos(angle), si = sin(angle);
 	replace4Rot(&(s->xA), &(s->yA), s->xCenter, s->yCenter, co, si);
 	replace4Rot(&(s->xB), &(s->yB), s->xCenter, s->yCenter, co, si);
 	replace4Rot(&(s->xC), &(s->yC), s->xCenter, s->yCenter, co, si);
 	replace4Rot(&(s->xD), &(s->yD), s->xCenter, s->yCenter, co, si);
+	// No need to update the center.
 }
 
 // Question: is it faster to apply the mutation on the AB segment,
@@ -68,9 +71,11 @@ void mutation(rng32 *rng, Square *s)
 {
 	// Rotations are rarely done. Optimization: only apply the
 	// rotation when the picked random value is small enough.
-	const float angle = rng32_nextFloat(rng);
-	if (angle < ROTATION_PROBA)
-		rotation(s, angle - ROTATION_PROBA/2.); // angle between -ROTATION_PROBA/2. and ROTATION_PROBA/2.
+
+	// const float angle = rng32_nextFloat(rng);
+	// if (angle < ROTATION_PROBA)
+	// 	rotation(s, angle - ROTATION_PROBA/2.); // angle between -ROTATION_PROBA/2. and ROTATION_PROBA/2.
+
 	translation(s, STEP_SIZE * rng32_nextFloat(rng), STEP_SIZE * rng32_nextFloat(rng));
 }
 
@@ -100,11 +105,12 @@ double findErrorRatio(const Square *sqArray, int n_squares)
 		ymax = fmax(ymax, sqArray[i].yC);
 		ymax = fmax(ymax, sqArray[i].yD);
 	}
-	printf( "xmin: %.3f, xmax: %.3f\n"
-			"ymin: %.3f, ymax: %.3f\n",
-			xmin, xmax, ymin, ymax);
-	return 1. - n_squares / fmax(xmax - xmin, ymax - ymin);
-	// return fmax(xmax - xmin, ymax - ymin) / n_squares - 1.;
+	// printf( "xmin: %.3f, xmax: %.3f\n"
+	// 		"ymin: %.3f, ymax: %.3f\n",
+	// 		xmin, xmax, ymin, ymax);
+	const double side = fmax(xmax - xmin, ymax - ymin);
+	return side * side / n_squares - 1.;
+	// return 1. - n_squares / (side * side);
 }
 
 bool checkConfiguration(const Square *sqArray, int n_squares)
@@ -125,16 +131,30 @@ bool intersects(const Square *s1, const Square *s2)
 	if (distance2(s1->xCenter, s1->yCenter, s2->xCenter, s2->yCenter) >= 8.)
 		return false;
 
-	const Point points_1[4] = {
-		(Point) {s1->xA, s1->yA}, (Point) {s1->xB, s1->yB},
-		(Point) {s1->xC, s1->yC}, (Point) {s1->xD, s1->yD}
+	Point points_1[4] = {
+		(Point) {s1->xA, s1->yA},
+		(Point) {s1->xB, s1->yB},
+		(Point) {s1->xC, s1->yC},
+		(Point) {s1->xD, s1->yD}
 	};
-	const Point points_2[4] = {
-		(Point) {s2->xA, s2->yA}, (Point) {s2->xB, s2->yB},
-		(Point) {s2->xC, s2->yC}, (Point) {s2->xD, s2->yD}
+	Point points_2[4] = {
+		(Point) {s2->xA, s2->yA},
+		(Point) {s2->xB, s2->yB},
+		(Point) {s2->xC, s2->yC},
+		(Point) {s2->xD, s2->yD}
 	};
-	const Segment segments_1[4] = {&(points_1[0]), &(points_1[1]), &(points_1[2]), &(points_1[3])};
-	const Segment segments_2[4] = {&(points_2[0]), &(points_2[1]), &(points_2[2]), &(points_2[3])};
+	const Segment segments_1[4] = {
+		(Segment) {points_1    , points_1 + 1},
+		(Segment) {points_1 + 1, points_1 + 2},
+		(Segment) {points_1 + 2, points_1 + 3},
+		(Segment) {points_1 + 3, points_1    }
+	};
+	const Segment segments_2[4] = {
+		(Segment) {points_2    , points_2 + 1},
+		(Segment) {points_2 + 1, points_2 + 2},
+		(Segment) {points_2 + 2, points_2 + 3},
+		(Segment) {points_2 + 3, points_2    }
+	};
 
 	// 16 pairwise segments intersections.
 	for (int i = 0; i < 4; ++i) {

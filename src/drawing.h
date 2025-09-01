@@ -8,6 +8,6 @@
 Point pointFromCoord(double x, double y);
 void drawPoint(const Point *point, const SDL_Color *color);
 void drawSegment(const Segment *segment, const SDL_Color *color);
-void animation(const Square *sqArray, int n_squares);
+void animation(Solution sol);
 
 #endif

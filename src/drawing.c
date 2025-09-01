@@ -40,15 +40,15 @@ void drawSegment(const Segment *segment, const SDL_Color *color)
 	}
 }
 
-void animation(const Square *sqArray, int n_squares)
+void animation(Solution sol)
 {
 	while (1) {
 		SDLA_ClearWindow(NULL);
-		for (int i = 0; i < n_squares; ++i) {
-			Point A = pointFromCoord(sqArray[i].xA, sqArray[i].yA);
-			Point B = pointFromCoord(sqArray[i].xB, sqArray[i].yB);
-			Point C = pointFromCoord(sqArray[i].xC, sqArray[i].yC);
-			Point D = pointFromCoord(sqArray[i].xD, sqArray[i].yD);
+		for (int i = 0; i < sol.n_squares; ++i) {
+			Point A = pointFromCoord(sol.sqArray[i].xA, sol.sqArray[i].yA);
+			Point B = pointFromCoord(sol.sqArray[i].xB, sol.sqArray[i].yB);
+			Point C = pointFromCoord(sol.sqArray[i].xC, sol.sqArray[i].yC);
+			Point D = pointFromCoord(sol.sqArray[i].xD, sol.sqArray[i].yD);
 			drawSegment(&(Segment) {&A, &B}, &Yellow);
 			drawSegment(&(Segment) {&B, &C}, &Yellow);
 			drawSegment(&(Segment) {&C, &D}, &Yellow);
@@ -57,7 +57,7 @@ void animation(const Square *sqArray, int n_squares)
 			drawPoint(&B, &Lime);
 			drawPoint(&C, &Lime);
 			drawPoint(&D, &Lime);
-		}
+		} // TODO: draw error ratio.
 
 		SDL_RenderPresent(renderer);
 		SDL_WaitEvent(&event);

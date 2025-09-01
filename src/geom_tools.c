@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <math.h>
 #include "geom_tools.h"
 
@@ -238,26 +239,48 @@ int isPointInHalfPlanePoint(const Point *point_test, const Point *point_ref, con
 int pointInsideSegment(const Point *A, const Segment *segment)
 {
 	const Point *start = segment->start;
-	const Point *end = segment->end;
+	const Point *end   = segment->end;
 	const double dirTo_end_X = end->x - start->x;
 	const double dirTo_end_Y = end->y - start->y;
 	const double dirTo_A_X = A->x - start->x;
 	const double dirTo_A_Y = A->y - start->y;
 
+	// if (epsilonEquality(dirTo_end_X, 0.) && epsilonEquality(dirTo_end_Y, 0.)) // start equals end.
+	// 	return (epsilonEquality(dirTo_A_X, 0.) && epsilonEquality(dirTo_A_Y, 0.));
+
+	// const double ratioX = dirTo_A_X / dirTo_end_X;
+	// const double ratioY = dirTo_A_Y / dirTo_end_Y;
+
+	// if (!epsilonEquality(ratioX, ratioY)) { // A isn't anywhere on the line.
+	// 	// printf("here! %.6f vs %.6f, %d\n", ratioX, ratioY, dirTo_end_X == 0. || dirTo_end_Y == 0.);
+	// 	// printPoint(A);
+	// 	// printSegment(segment);
+	// 	return -2;
+	// }
+	// if (epsilonInequality(ratioX, 0.)) // A is before the start of the segment.
+	// 	return -1;
+	// if (epsilonInequality(1., ratioX)) // A is after the end of the segment.
+	// 	return 1;
+	// else
+	// 	return 0; // A is inside the segment.
+	// // This breaks with perfectly horizontal or vertical segments...
+
+
 	if (epsilonEquality(dirTo_end_X, 0.) && epsilonEquality(dirTo_end_Y, 0.)) // start equals end.
 		return (epsilonEquality(dirTo_A_X, 0.) && epsilonEquality(dirTo_A_Y, 0.));
 
-	const double ratioX = dirTo_A_X / dirTo_end_X;
-	const double ratioY = dirTo_A_Y / dirTo_end_Y;
-
-	if (!epsilonEquality(ratioX, ratioY)) // A isn't anywhere on the line.
+	// Checking if A isn't anywhere on the line. Test is det(A-S, E-S) != 0
+	if (!epsilonEquality(dirTo_A_X * dirTo_end_Y - dirTo_A_Y * dirTo_end_X, 0.))
 		return -2;
-	if (epsilonInequality(ratioX, 0.)) // A is before the start of the segment.
+
+	if ((epsilonEquality(dirTo_end_X, 0.) || dirTo_A_X / dirTo_end_X <= 0.) &&
+		(epsilonEquality(dirTo_end_Y, 0.) || dirTo_A_Y / dirTo_end_Y <= 0.)) // A is before the start of the segment.
 		return -1;
-	if (epsilonInequality(1., ratioX)) // A is after the end of the segment.
+	if ((epsilonEquality(dirTo_end_X, 0.) || dirTo_A_X / dirTo_end_X >= 1.) &&
+		(epsilonEquality(dirTo_end_Y, 0.) || dirTo_A_Y / dirTo_end_Y >= 1.)) // A is after the start of the segment.
 		return 1;
 	else
-		return 0; // A is on the segment.
+		return 0; // A is inside the segment.
 }
 
 /////////////////////////////////////////////

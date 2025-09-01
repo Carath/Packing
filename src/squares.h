@@ -14,6 +14,13 @@ typedef struct
 	double xCenter, yCenter;
 } Square; // square length = 1.
 
+typedef struct
+{
+	Square *sqArray;
+	const int n_squares;
+	double error;
+} Solution;
+
 Square createSquare(double xA, double yA, double xB, double yB, Direction d);
 void printSquare(const Square *s);
 void translation(Square *s, double xDelta, double yDelta);
@@ -22,6 +29,5 @@ void mutation(rng32 *rng, Square *s);
 double findErrorRatio(const Square *sqArray, int n_squares);
 bool intersects(const Square *s1, const Square *s2);
 bool checkConfiguration(const Square *sqArray, int n_squares);
-// bool checkSquare(const Square *s);
 
 #endif
