@@ -79,10 +79,8 @@ void mutation(rng32 *rng, Square *s)
 	translation(s, STEP_SIZE * rng32_nextFloat(rng), STEP_SIZE * rng32_nextFloat(rng));
 }
 
-// Only pertinent when the squares do not intersect non trivially.
-double findErrorRatio(const Square *sqArray, int n_squares)
+Box findBoundary(const Square *sqArray, int n_squares)
 {
-	assert(checkConfiguration(sqArray, n_squares));
 	double xmin = INFINITY, xmax = -INFINITY, ymin = INFINITY, ymax = -INFINITY;
 	for (int i = 0; i < n_squares; ++i) {
 		xmin = fmin(xmin, sqArray[i].xA);
@@ -105,10 +103,16 @@ double findErrorRatio(const Square *sqArray, int n_squares)
 		ymax = fmax(ymax, sqArray[i].yC);
 		ymax = fmax(ymax, sqArray[i].yD);
 	}
-	// printf( "xmin: %.3f, xmax: %.3f\n"
-	// 		"ymin: %.3f, ymax: %.3f\n",
-	// 		xmin, xmax, ymin, ymax);
-	const double side = fmax(xmax - xmin, ymax - ymin);
+	return (Box) {xmin, xmax, ymin, ymax};
+}
+
+// Only pertinent when the squares do not intersect non trivially,
+// this should be verified with checkConfiguration() beforehand.
+double findErrorRatio(const Square *sqArray, int n_squares)
+{
+	// assert(checkConfiguration(sqArray, n_squares));
+	const Box b = findBoundary(sqArray, n_squares);
+	const double side = fmax(b.xmax - b.xmin, b.ymax - b.ymin);
 	return side * side / n_squares - 1.;
 	// return 1. - n_squares / (side * side);
 }
@@ -127,8 +131,8 @@ bool checkConfiguration(const Square *sqArray, int n_squares)
 // Only returns true on non-trivial intersections.
 bool intersects(const Square *s1, const Square *s2)
 {
-	// Optimizations to not consider far away squares. Min distance is 8c².
-	if (distance2(s1->xCenter, s1->yCenter, s2->xCenter, s2->yCenter) >= 8.)
+	// Optimizations to not consider far away squares. Min squared distance is 2c².
+	if (distance2(s1->xCenter, s1->yCenter, s2->xCenter, s2->yCenter) >= 2.)
 		return false;
 
 	Point points_1[4] = {

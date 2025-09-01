@@ -42,6 +42,10 @@ void drawSegment(const Segment *segment, const SDL_Color *color)
 
 void animation(Solution sol)
 {
+	SDLA_Init(&window, &renderer, "Squares", WINDOW_WIDTH, WINDOW_HEIGHT, 0, SDLA_BLENDED);
+	// const Box b = findBoundary(sol.sqArray, sol.n_squares)
+	// TODO: center the squares using b.
+
 	while (1) {
 		SDLA_ClearWindow(NULL);
 		for (int i = 0; i < sol.n_squares; ++i) {
