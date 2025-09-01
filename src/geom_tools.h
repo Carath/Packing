@@ -85,6 +85,12 @@ double detFromPoints(const Point *A, const Point *B);
 // 'co' and 'si' are the precomputed cosinus and sinus of the desired rotation's angle.
 Point rotatePoint(const Point center, Point A, double co, double si);
 
+void swapPoints(Point *A, Point *B);
+
+Point getCenter(const Point *points, int length);
+
+bool isPointInArray(const Point *p, const Point *array, int length);
+
 /////////////////////////////////////////////
 // Segments:
 /////////////////////////////////////////////
@@ -122,18 +128,12 @@ bool isPointInSegment(const Point *A, const Segment *segment, bool strict);
 // If strict is true, the intersection must not be on any segment bounds.
 bool segmentsIntersection(const Segment *segment1, const Segment *segment2, bool strict, Point *p);
 
+bool isPointInPolygon(const Point *p, const Point polygonPoints[N_SIDES], const Line polygonlines[N_SIDES]);
+
 /////////////////////////////////////////////
 
 // Returns the squared area of the triangle ABC, using Heron's formula:
 double area2(const Point *A, const Point *B, const Point *C);
-
-bool isInPolygon(const Point *p, const Point polygonPoints[N_SIDES], const Line polygonlines[N_SIDES]);
-
-bool isPointInArray(const Point *p, const Point *array, int length);
-
-void swapPoint(Point *A, Point *B);
-
-Point getCenter(const Point *points, int length);
 
 double intersectionArea(const Polygon *pol1, const Polygon *pol2);
 
