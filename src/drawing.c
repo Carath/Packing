@@ -41,38 +41,40 @@ void drawSegment(const Segment *segment, const SDL_Color *color)
 	}
 }
 
-void drawSquare(const Square *square)
+void drawPolygon(const Polygon *polygon)
 {
 	for (int j = 0; j < N_SIDES; ++j)
-		drawSegment(&(Segment) {square->points + j, square->points + (j+1)%N_SIDES}, &Yellow);
+		drawSegment(&(Segment) {polygon->points + j, polygon->points + (j+1) % N_SIDES}, &Yellow);
 	for (int j = 0; j < N_SIDES; ++j)
-		drawPoint(square->points + j, &Lime);
+		drawPoint(polygon->points + j, &Lime);
 }
 
 void animation(Solution sol)
 {
-	SDLA_Init(&window, &renderer, "Squares", WINDOW_WIDTH, WINDOW_HEIGHT, 0, SDLA_BLENDED);
+	SDLA_Init(&window, &renderer, "Packing", WINDOW_WIDTH, WINDOW_HEIGHT, 0, SDLA_BLENDED);
 	TTF_Font *font = TTF_OpenFont(FONT_NAME, FONT_SIZE);
 	while (1) {
 		SDLA_ClearWindow(NULL);
 
 		// 'sol' could be updated here...
-		const Box box = findBoundary(sol.sqArray, sol.n_squares);
+		const Box box = findBoundary(sol.polArray, sol.n_polygons);
 		const double xOffset = (WINDOW_WIDTH  / DRAW_SCALE - (box.xmax - box.xmin)) / 2. - box.xmin;
 		const double yOffset = (WINDOW_HEIGHT / DRAW_SCALE - (box.ymax - box.ymin)) / 2. - box.ymin;
-		for (int i = 0; i < sol.n_squares; ++i) {
-			const Point *points = sol.sqArray[i].points;
-			Square projectedSquare = {0}; // center left to (0, 0)
+		for (int i = 0; i < sol.n_polygons; ++i) {
+			const Point *points = sol.polArray[i].points;
+			Polygon projectedPolygon = {0}; // center left to (0, 0)
 			for (int j = 0; j < N_SIDES; ++j)
-				projectedSquare.points[j] = pointFromCoord(xOffset, yOffset, points[j].x, points[j].y);
-			drawSquare(&projectedSquare);
+				projectedPolygon.points[j] = pointFromCoord(xOffset, yOffset, points[j].x, points[j].y);
+			drawPolygon(&projectedPolygon);
 		}
 		if (font) {
 			char bufferStr[100] = {0};
-			sprintf(bufferStr, "Error ratio: %.4f", sol.error);
+			sprintf(bufferStr, "Polygons sides: %d and number: %d", N_SIDES, sol.n_polygons);
 			SDLA_SlowDrawText(font, &Yellow, 50, 50, bufferStr);
-			sprintf(bufferStr, "Big square size: %.4f", sol.bigSquareSide);
+			sprintf(bufferStr, "Error ratio: %.4f", sol.error);
 			SDLA_SlowDrawText(font, &Yellow, 50, 100, bufferStr);
+			sprintf(bufferStr, "Big square size: %.4f", sol.bigSquareSide);
+			SDLA_SlowDrawText(font, &Yellow, 50, 150, bufferStr);
 		}
 
 		SDL_RenderPresent(renderer);

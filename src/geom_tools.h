@@ -24,7 +24,7 @@ typedef struct
 {
 	Point points[N_SIDES];
 	Point center; // put this as the array last spot?
-} Square; // square length = 1.
+} Polygon; // polygon area = 1.
 
 // TODO: inline short functions
 
@@ -102,10 +102,10 @@ bool segmentsNonTrivialIntersection(const Segment *segment_1, const Segment *seg
 // Returns the squared area of the triangle ABC, using Heron's formula:
 double area2(const Point *A, const Point *B, const Point *C);
 
-bool isInSquare(const Point *p, const Point squarePoints[N_SIDES], const Line squarelines[N_SIDES]);
+bool isInPolygon(const Point *p, const Point polygonPoints[N_SIDES], const Line polygonlines[N_SIDES]);
 
 bool isPointInArray(const Point *p, const Point *array, int length);
 
-double intersectionArea2(const Square *s1, const Square *s2);
+double intersectionArea2(const Polygon *pol1, const Polygon *pol2);
 
 #endif

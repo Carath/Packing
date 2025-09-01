@@ -2,7 +2,7 @@
 # Settings:
 
 # Executable name:
-EXE_NAME = squares
+EXE_NAME = packing
 
 # Source and object files locations:
 SRC_DIR = src

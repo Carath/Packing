@@ -3,18 +3,18 @@
 
 #define N_SIDES (4)
 
-// Squares functions settings:
+// Polygons functions settings:
 #define EPSILON        (1.e-6)
 #define INIT_MARGIN    (0.50)
 
 #define NEIGHBOURHOOD  (10)
 #define ROTATION_RANGE (0.05)
 
-// Those work well with n_squares = 5
+// Those work well with n_polygons = 5
 #define ROTATION_PROBA (0.15f)
 #define STEP_SIZE      (0.05f)
 
-// // Those work well with n_squares = 7
+// // Those work well with n_polygons = 7
 // #define ROTATION_PROBA ((float) 0.25f)
 // #define STEP_SIZE      ((float) 0.1)
 

@@ -212,15 +212,10 @@ double area2(const Point *A, const Point *B, const Point *C)
 	return s*(s-a)*(s-b)*(s-c);
 }
 
-bool isInSquare(const Point *p, const Point squarePoints[N_SIDES], const Line squarelines[N_SIDES])
+bool isInPolygon(const Point *p, const Point polygonPoints[N_SIDES], const Line polygonlines[N_SIDES])
 {
-	// return isPointInHalfPlanePoint(p, squarePoints + 2, squarelines    )
-	// 	&& isPointInHalfPlanePoint(p, squarePoints + 3, squarelines + 1)
-	// 	&& isPointInHalfPlanePoint(p, squarePoints    , squarelines + 2)
-	// 	&& isPointInHalfPlanePoint(p, squarePoints + 1, squarelines + 3);
-
 	for (int i = 0; i < N_SIDES; ++i) {
-		if (!isPointInHalfPlanePoint(p, squarePoints + (i+2)%N_SIDES, squarelines + i))
+		if (!isPointInHalfPlanePoint(p, polygonPoints + (i+2) % N_SIDES, polygonlines + i))
 			return false;
 	}
 	return true;
@@ -237,25 +232,25 @@ bool isPointInArray(const Point *p, const Point *array, int length)
 
 // Idea: compute non trivial intersections surface!
 // To realize that, compute every intersection poitn of sides, keep them along with
-// squares corners inside the intersection. Said intersection is the convex hull of those points,
+// polygons corners inside the intersection. Said intersection is the convex hull of those points,
 // to compute it just divide the area in triangles.
-double intersectionArea2(const Square *s1, const Square *s2)
+double intersectionArea2(const Polygon *pol1, const Polygon *pol2)
 {
 	Line lines1[N_SIDES] = {0};
 	Line lines2[N_SIDES] = {0};
 	for (int i = 0; i < N_SIDES; ++i) {
-		lines1[i] = lineFromPoints(s1->points + i, s1->points + (i+1)%N_SIDES);
-		lines2[i] = lineFromPoints(s2->points + i, s2->points + (i+1)%N_SIDES);
+		lines1[i] = lineFromPoints(pol1->points + i, pol1->points + (i+1) % N_SIDES);
+		lines2[i] = lineFromPoints(pol2->points + i, pol2->points + (i+1) % N_SIDES);
 	}
 
 	// 2*N_SIDES should be the max non trivial intersection points:
 	Point allIntersections[2*N_SIDES] = {0};
 	int idx = 0;
 	for (int i = 0; i < N_SIDES; ++i) {
-		if (isInSquare(s1->points + i, s2->points, lines2)) // corners are accepted
-			allIntersections[idx++] = s1->points[i];
-		if (isInSquare(s2->points + i, s1->points, lines1)) // corners are accepted
-			allIntersections[idx++] = s2->points[i];
+		if (isInPolygon(pol1->points + i, pol2->points, lines2)) // corners are accepted
+			allIntersections[idx++] = pol1->points[i];
+		if (isInPolygon(pol2->points + i, pol1->points, lines1)) // corners are accepted
+			allIntersections[idx++] = pol2->points[i];
 	}
 	for (int i = 0; i < N_SIDES; ++i) {
 		for (int j = 0; j < N_SIDES; ++j) {

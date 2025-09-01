@@ -8,9 +8,6 @@
 
 ## TODO
 
-- Modify createSquare() so it can support any regular polygon (N_SIDES > 3).
-- Rename 'square' struct, files to 'polygon'.
-- Move the search algorithms to a dedicated file.
 - Search: save good quality configurations.
 - Add other init positions?
 

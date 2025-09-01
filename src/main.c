@@ -1,19 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <string.h>
 #include <math.h>
 #include <time.h>
 #include <assert.h>
-#include "squares.h"
+#include "polygons.h"
 #include "drawing.h"
+#include "search.h"
 
 void testIntersection(void);
-void testSquareCreation(rng32 *rng);
-
-Solution init(int n_squares, rng32 *rng);
-void optimize(Solution *sol, rng32 *rng, int iterationNumber);
-void optimize_2(Solution *sol, rng32 *rng, int iterationNumber);
+void testPolygonCreation(rng32 *rng);
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
@@ -28,14 +24,14 @@ int main(int argc, char const *argv[])
 	rng32_init(&rng, seed, 0);
 
 	// testIntersection();
-	// testSquareCreation(&rng);
+	// testPolygonCreation(&rng);
 
-	const int n_squares = 5;
+	const int n_polygons = 5;
 	// const int iterationNumber = 1000;
 	const int iterationNumber = 1000000;
 	// const int iterationNumber = 1000000 / NEIGHBOURHOOD;
 
-	Solution sol = init(n_squares, &rng);
+	Solution sol = init(n_polygons, &rng);
 	printf("Init error ratio: %.4f\n", sol.error);
 
 	optimize(&sol, &rng, iterationNumber);
@@ -46,7 +42,7 @@ int main(int argc, char const *argv[])
 
 	animation(sol);
 
-	free(sol.sqArray);
+	free(sol.polArray);
 	return 0;
 }
 
@@ -59,106 +55,15 @@ void testIntersection(void)
 	exit(0);
 }
 
-void testSquareCreation(rng32 *rng)
+void testPolygonCreation(rng32 *rng)
 {
-	Square sq = createSquare(rng32_nextFloat(rng), rng32_nextFloat(rng));
+	Polygon pol = createPolygon(rng32_nextFloat(rng), rng32_nextFloat(rng));
 	double err_max = 0.;
 	for (int i = 0; i < N_SIDES; ++i) {
-		const double length = distance(sq.points + i, sq.points + (i+1) % N_SIDES);
+		const double length = distance(pol.points + i, pol.points + (i+1) % N_SIDES);
 		const double err = relative_error(1., length);
 		err_max = fmax(err_max, err);
 	}
 	printf("Length max relative error: %g\n\n", err_max);
 	exit(0);
-}
-
-Solution init(int n_squares, rng32 *rng)
-{
-	// const double diameter = 2. * getRadius();
-	const int n_side = (int) sqrtf(n_squares);
-	Square *sqArray = (Square*) calloc(n_squares, sizeof(Square));
-	for (int k = 0; k < n_squares; ++k) {
-		const int i = k / n_side, j = k % n_side;
-		const double x = i * (1. + INIT_MARGIN), y = j * (1. + INIT_MARGIN);
-		// #define INIT_MARGIN_2 (0.0606598435597)
-		// const double x = i * diameter * (1. + INIT_MARGIN_2), y = j * diameter * (1. + INIT_MARGIN_2);
-		sqArray[k] = createSquare(x, y);
-		// printSquare(sqArray + k);
-	}
-	double side = 0, error = 0;
-	findErrorRatio(sqArray, n_squares, &side, &error);
-	return (Solution) {sqArray, n_squares, side, error};
-}
-
-void optimize(Solution *sol, rng32 *rng, int iterationNumber)
-{
-	const int n_squares = sol->n_squares;
-	Square *sqArray = sol->sqArray;
-	Square *best_sqArray = (Square*) calloc(n_squares, sizeof(Square));
-	memcpy(best_sqArray, sqArray, n_squares * sizeof(Square));
-	for (int i = 0; i < iterationNumber; ++i) {
-		for (int j = 0; j < n_squares; ++j) {
-			const int idx = j; // trying to move every square before evaluating.
-			// const int idx = rng32_nextInt(rng) % n_squares;
-			mutation(rng, sqArray + idx);
-		}
-		if (checkConfiguration(sqArray, n_squares)) {
-			double side = 0, error = 0;
-			findErrorRatio(sqArray, n_squares, &side, &error);
-			if (error < sol->error) { // greedy
-				sol->bigSquareSide = side;
-				sol->error = error;
-				memcpy(best_sqArray, sqArray, n_squares * sizeof(Square));
-				printf("Improvement at iteration %d: %.4f\n", i, sol->error);
-			}
-		}
-		else // backtracking
-			memcpy(sqArray, best_sqArray, n_squares * sizeof(Square));
-	}
-	free(best_sqArray);
-}
-
-void optimize_2(Solution *sol, rng32 *rng, int iterationNumber)
-{
-	const int n_squares = sol->n_squares;
-	Square *sqArray = sol->sqArray;
-	Square* buffer[NEIGHBOURHOOD] = {0};
-	for (int k = 0; k < NEIGHBOURHOOD; ++k) {
-		buffer[k] = (Square*) calloc(n_squares, sizeof(Square));
-		memcpy(buffer[k], sqArray, n_squares * sizeof(Square));
-	}
-
-	// bool progress = true; // to init the buffer
-	for (int i = 0; i < iterationNumber; ++i) {
-
-		// if (progress) {
-		// 	for (int k = 0; k < NEIGHBOURHOOD; ++k)
-		// 		memcpy(buffer[k], sqArray, n_squares * sizeof(Square));
-		// 	progress = false;
-		// }
-
-		for (int k = 0; k < NEIGHBOURHOOD; ++k) { // for local exploration
-			for (int j = 0; j < n_squares; ++j) {
-				const int idx = j; // trying to move every square before evaluating.
-				// const int idx = rng32_nextInt(rng) % n_squares;
-				mutation(rng, buffer[k] + idx);
-			}
-			if (checkConfiguration(buffer[k], n_squares)) {
-				double side = 0, error = 0;
-				findErrorRatio(buffer[k], n_squares, &side, &error);
-				if (error < sol->error) { // greedy
-					// progress = true;
-					sol->bigSquareSide = side;
-					sol->error = error;
-					memcpy(sqArray, buffer[k], n_squares * sizeof(Square));
-					printf("Improvement at iteration %d: %.4f\n", i, sol->error);
-				}
-			}
-			else // backtracking
-				memcpy(buffer[k], sqArray, n_squares * sizeof(Square)); // may not be up to date
-		}
-
-	}
-	for (int k = 0; k < NEIGHBOURHOOD; ++k)
-		free(buffer[k]);
 }
