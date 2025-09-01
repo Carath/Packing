@@ -4,19 +4,34 @@
 #include <assert.h>
 #include "squares.h"
 
-// static const double twoPi = 6.28318530718;
+static const double Pi = 3.14159265359;
+static const double N_angle = 2. * Pi / N_SIDES;
+static double Diam2 = 0.;
+static double Radius = 0.;
 
-Square createSquare(double xA, double yA, double xB, double yB, Direction d) // specific to squares. TODO!
+// To be called at the program's start.
+void initConstExpr(void)
 {
-	assert(fabs(distance2(xA, yA, xB, yB) - 1.) < EPSILON);
-	const double xC = xB - d * (yB-yA), yC = yB + d * (xB-xA);
-	Square s = {0};
-	s.points[0] = (Point) {xA, yA};
-	s.points[1] = (Point) {xB, yB};
-	s.points[2] = (Point) {xC, yC};
-	s.points[3] = (Point) {xA + xC - xB, yA + yC - yB};
-	s.center = (Point) {(xA + xC) / 2., (yA + yC) / 2.};
-	return s;
+	assert(N_SIDES > 2);
+	Diam2 = 8. / (N_SIDES * sin(N_angle)); // squared diameter.
+	Radius = sqrt(Diam2) / 2.; // chosen so that the area is 1 for all N_SIDES.
+}
+
+double getRadius(void)
+{
+	return Radius;
+}
+
+// Generate a square of area equal to 1.
+Square createSquare(double xCenter, double yCenter)
+{
+	Square sq = {0};
+	sq.center = (Point) {xCenter, yCenter};
+	for (int i = 0; i < N_SIDES; ++i) {
+		const double angle = (i + 0.5) * N_angle;
+		sq.points[i] = (Point) {xCenter + Radius * cos(angle), yCenter + Radius * sin(angle)};
+	}
+	return sq;
 }
 
 void printSquare(const Square *s)
@@ -41,12 +56,8 @@ void rotation(Square *s, double angle)
 {
 	const double co = cos(angle), si = sin(angle);
 	for (int i = 0; i < N_SIDES; ++i) {
-		const double xDelta = s->points[i].x - s->center.x;
-		const double yDelta = s->points[i].y - s->center.y;
-		s->points[i].x = co * xDelta - si * yDelta + s->center.x;
-		s->points[i].y = si * xDelta + co * yDelta + s->center.y;
-	}
-	// No need to update the center for this one.
+		s->points[i] = rotatePoint(s->center, s->points[i], co, si);
+	} // No need to update the center for this one.
 }
 
 // Question: is it faster to apply the mutation on the AB segment,
@@ -101,6 +112,12 @@ void findErrorRatio(const Square *sqArray, int n_squares, double *side, double *
 	// *error = 1. - n_squares / (*side * *side);
 }
 
+double relative_error(double ref, double x)
+{
+	assert(ref != 0.);
+	return fabs((x - ref) / ref);
+}
+
 bool checkConfiguration(const Square *sqArray, int n_squares)
 {
 	for (int i = 0; i < n_squares; ++i) {
@@ -115,17 +132,15 @@ bool checkConfiguration(const Square *sqArray, int n_squares)
 // Only returns true on non-trivial intersections.
 bool intersects(const Square *s1, const Square *s2)
 {
-	// Huge optimization to not consider far away squares. Min squared distance is 2c².
-	if (distance2(s1->center.x, s1->center.y, s2->center.x, s2->center.y) >= 2.)
+	// Huge optimization to not consider far away squares.
+	if (distance2(s1->center.x, s1->center.y, s2->center.x, s2->center.y) >= Diam2)
 		return false;
 
-	Point *points1 = (Point*) s1->points;
-	Point *points2 = (Point*) s2->points;
 	Segment segments_1[N_SIDES] = {0};
 	Segment segments_2[N_SIDES] = {0};
 	for (int i = 0; i < N_SIDES; ++i) {
-		segments_1[i] = (Segment) {points1 + i, points1 + (i+1)%N_SIDES};
-		segments_2[i] = (Segment) {points2 + i, points2 + (i+1)%N_SIDES};
+		segments_1[i] = (Segment) {s1->points + i, s1->points + (i+1) % N_SIDES};
+		segments_2[i] = (Segment) {s2->points + i, s2->points + (i+1) % N_SIDES};
 	}
 
 	// 16 pairwise segments intersections.

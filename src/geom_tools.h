@@ -11,7 +11,7 @@ typedef struct
 
 typedef struct
 {
-	Point *start, *end;
+	const Point *start, *end;
 } Segment;
 
 // Line of equation: ax + by + c = 0:
@@ -57,6 +57,9 @@ double distance2(double x1, double y1, double x2, double y2);
 
 // Euclidean distance between the Points A and B:
 double distance(const Point *A, const Point *B);
+
+// 'co' and 'si' are the precomputed cosinus and sinus of the desired rotation's angle.
+Point rotatePoint(const Point center, Point p, double co, double si);
 
 /////////////////////////////////////////////
 // Segments:

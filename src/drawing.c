@@ -41,6 +41,14 @@ void drawSegment(const Segment *segment, const SDL_Color *color)
 	}
 }
 
+void drawSquare(const Square *square)
+{
+	for (int j = 0; j < N_SIDES; ++j)
+		drawSegment(&(Segment) {square->points + j, square->points + (j+1)%N_SIDES}, &Yellow);
+	for (int j = 0; j < N_SIDES; ++j)
+		drawPoint(square->points + j, &Lime);
+}
+
 void animation(Solution sol)
 {
 	SDLA_Init(&window, &renderer, "Squares", WINDOW_WIDTH, WINDOW_HEIGHT, 0, SDLA_BLENDED);
@@ -53,14 +61,11 @@ void animation(Solution sol)
 		const double xOffset = (WINDOW_WIDTH  / DRAW_SCALE - (box.xmax - box.xmin)) / 2. - box.xmin;
 		const double yOffset = (WINDOW_HEIGHT / DRAW_SCALE - (box.ymax - box.ymin)) / 2. - box.ymin;
 		for (int i = 0; i < sol.n_squares; ++i) {
-			const Point *p = sol.sqArray[i].points;
-			Point projectedPoints[N_SIDES] = {0};
+			const Point *points = sol.sqArray[i].points;
+			Square projectedSquare = {0}; // center left to (0, 0)
 			for (int j = 0; j < N_SIDES; ++j)
-				projectedPoints[j] = pointFromCoord(xOffset, yOffset, p[j].x, p[j].y);
-			for (int j = 0; j < N_SIDES; ++j)
-				drawSegment(&(Segment) {projectedPoints + j, projectedPoints + (j+1)%N_SIDES}, &Yellow);
-			for (int j = 0; j < N_SIDES; ++j)
-				drawPoint(projectedPoints + j, &Lime);
+				projectedSquare.points[j] = pointFromCoord(xOffset, yOffset, points[j].x, points[j].y);
+			drawSquare(&projectedSquare);
 		}
 		if (font) {
 			char bufferStr[100] = {0};

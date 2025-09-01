@@ -8,7 +8,9 @@
 #include "squares.h"
 #include "drawing.h"
 
-void intersectionTest(void);
+void testIntersection(void);
+void testSquareCreation(rng32 *rng);
+
 Solution init(int n_squares, rng32 *rng);
 void optimize(Solution *sol, rng32 *rng, int iterationNumber);
 void optimize_2(Solution *sol, rng32 *rng, int iterationNumber);
@@ -18,12 +20,15 @@ SDL_Renderer *renderer = NULL;
 
 int main(int argc, char const *argv[])
 {
-	// intersectionTest();
+	initConstExpr();
 
 	// const uint64_t seed = time(NULL);
 	const uint64_t seed = 123456;
 	rng32 rng = {0};
 	rng32_init(&rng, seed, 0);
+
+	// testIntersection();
+	// testSquareCreation(&rng);
 
 	const int n_squares = 5;
 	// const int iterationNumber = 1000;
@@ -45,7 +50,7 @@ int main(int argc, char const *argv[])
 	return 0;
 }
 
-void intersectionTest(void)
+void testIntersection(void)
 {
 	Point A = {-1, 0}, B = {1, 0};
 	Point C = {0, -1}, D = {0, 1};
@@ -54,16 +59,30 @@ void intersectionTest(void)
 	exit(0);
 }
 
+void testSquareCreation(rng32 *rng)
+{
+	Square sq = createSquare(rng32_nextFloat(rng), rng32_nextFloat(rng));
+	double err_max = 0.;
+	for (int i = 0; i < N_SIDES; ++i) {
+		const double length = distance(sq.points + i, sq.points + (i+1) % N_SIDES);
+		const double err = relative_error(1., length);
+		err_max = fmax(err_max, err);
+	}
+	printf("Length max relative error: %g\n\n", err_max);
+	exit(0);
+}
+
 Solution init(int n_squares, rng32 *rng)
 {
+	// const double diameter = 2. * getRadius();
 	const int n_side = (int) sqrtf(n_squares);
 	Square *sqArray = (Square*) calloc(n_squares, sizeof(Square));
 	for (int k = 0; k < n_squares; ++k) {
-		// const double x = rng32_nextFloat(rng), y = rng32_nextFloat(rng),
-		// 	theta = rng32_nextFloat(rng); // random
 		const int i = k / n_side, j = k % n_side;
-		const double x = i * (1. + INIT_MARGIN), y = j * (1. + INIT_MARGIN), theta = 0.;
-		sqArray[k] = createSquare(x, y, x + cos(theta), y + sin(theta), POS);
+		const double x = i * (1. + INIT_MARGIN), y = j * (1. + INIT_MARGIN);
+		// #define INIT_MARGIN_2 (0.0606598435597)
+		// const double x = i * diameter * (1. + INIT_MARGIN_2), y = j * diameter * (1. + INIT_MARGIN_2);
+		sqArray[k] = createSquare(x, y);
 		// printSquare(sqArray + k);
 	}
 	double side = 0, error = 0;

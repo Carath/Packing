@@ -61,7 +61,7 @@ inline double distance2(double x1, double y1, double x2, double y2)
 }
 
 // Euclidean distance between the Points A and B:
-double distance(const Point *A, const Point *B)
+inline double distance(const Point *A, const Point *B)
 {
 	// assert(A && B);
 	return sqrt(distance2(A->x, A->y, B->x, B->y));
@@ -73,6 +73,16 @@ double distance(const Point *A, const Point *B)
 // 	return A->x * B->y - A->y * B->x;
 // 	// return determinant(A->x, A->y, B->x, B->y);
 // }
+
+// 'co' and 'si' are the precomputed cosinus and sinus of the desired rotation's angle.
+Point rotatePoint(const Point center, Point p, double co, double si)
+{
+	const double xDelta = p.x - center.x;
+	const double yDelta = p.y - center.y;
+	p.x = co * xDelta - si * yDelta + center.x;
+	p.y = si * xDelta + co * yDelta + center.y;
+	return p;
+}
 
 /////////////////////////////////////////////
 // Segments:
