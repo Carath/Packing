@@ -19,8 +19,8 @@ typedef struct
 	double a, b, c;
 } Line;
 // Line of equation: ax + by + c = 0.
-// N.B: a Line could also be represented by a reference Point, and a vector
-// encoded by another Point. Maybe this yields to less computations...
+// N.B: a Line could also be represented as (P, u): a reference Point, and a
+// vector encoded by another Point. Maybe this yields to less computations...
 
 typedef struct
 {
@@ -62,6 +62,9 @@ bool epsilonInequality(double x, double y);
 // Points:
 /////////////////////////////////////////////
 
+// Maybe not passing points by adress could speedup some
+// functions, and would allow to chain operations easily...
+
 void printPoint(const Point *point);
 
 // Checks if the two given points are equal:
@@ -74,6 +77,9 @@ double determinant(double x1, double y1, double x2, double y2);
 
 double scalarProduct(double x1, double y1, double x2, double y2);
 
+// Euclidean norm squared of a vector stored as a Point.
+double norm2(const Point *A);
+
 // Euclidean distance squared.
 double distance2(const Point *A, const Point *B);
 
@@ -81,6 +87,8 @@ double distance2(const Point *A, const Point *B);
 double distance(const Point *A, const Point *B);
 
 double detFromPoints(const Point *A, const Point *B);
+
+double scalProdFromPoints(const Point *A, const Point *B);
 
 // 'co' and 'si' are the precomputed cosinus and sinus of the desired rotation's angle.
 Point rotatePoint(const Point center, Point A, double co, double si);
@@ -106,6 +114,8 @@ double length(const Segment *segment);
 void printLine(const Line *line);
 
 Line lineFromPoints(const Point *A, const Point *B);
+
+Line perpendicularBisector(const Point *A, const Point *B);
 
 /////////////////////////////////////////////
 // More 'advanced' geometric utilities:

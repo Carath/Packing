@@ -61,12 +61,18 @@ inline double scalarProduct(double x1, double y1, double x2, double y2)
 	return x1 * x2 + y1 * y2;
 }
 
+// Euclidean norm squared of a vector stored as a Point.
+inline double norm2(const Point *A)
+{
+	return A->x * A->x + A->y * A->y;
+}
+
 // Euclidean distance squared.
 inline double distance2(const Point *A, const Point *B)
 {
 	// assert(A && B);
 	const Point AB = vector(A, B);
-	return AB.x * AB.x + AB.y * AB.y;
+	return norm2(&AB);
 }
 
 // Euclidean distance between the Points A and B:
@@ -79,6 +85,11 @@ inline double distance(const Point *A, const Point *B)
 inline double detFromPoints(const Point *A, const Point *B)
 {
 	return A->x * B->y - A->y * B->x;
+}
+
+inline double scalProdFromPoints(const Point *A, const Point *B)
+{
+	return A->x * A->y + B->x * B->y;
 }
 
 // 'co' and 'si' are the precomputed cosinus and sinus of the desired rotation's angle.
@@ -150,6 +161,13 @@ Line lineFromPoints(const Point *A, const Point *B)
 	return (Line) {B->y - A->y, A->x - B->x, detFromPoints(B, A)};
 	// const Point AB = vector(A, B);
 	// return (Line) {-AB.y, AB.x, detFromPoints(A, B)};
+}
+
+// Would probably benefit from a purely vectorial representation.
+Line perpendicularBisector(const Point *A, const Point *B)
+{
+	// assert(A && B);
+	return (Line) {B->x - A->x, B->y - A->y, (norm2(A) - norm2(B)) / 2.};
 }
 
 /////////////////////////////////////////////
