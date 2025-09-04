@@ -7,15 +7,15 @@
  * - Initializing the internal state of the given rng. The 'stream' parameter
  *   is optional since several rng do not support this, and can be left to 0:
  *
- *     void rng32_init(void *generic_rng32, uint64_t seed, uint64_t stream);
+ *     void rng32_init(rng32 *rng, uint64_t seed, uint64_t stream);
  *
  * - Generating the next unsigned 32-bit integer, from the given rng:
  *
- *     uint32_t rng32_nextInt(void *generic_rng32);
+ *     uint32_t rng32_nextInt(rng32 *rng);
  *
  * - Generating a float uniformly between 0. and 1., from the given rng:
  *
- *     float rng32_nextFloat(void *generic_rng32);
+ *     float rng32_nextFloat(rng32 *rng);
  *
  * A stream, when available, is useful for producing distincts sequences of random number,
  * from the same rng and the same seed. Finally, RNG32_MAX is the maximum value that the
@@ -37,9 +37,8 @@
 */
 /* --------------------------------------------------------------------------- */
 /*
- * What follows basically is the implementation of the 32-bit PCG RNG, stripped of the
- * global rng, with the addition of the function rng32_nextFloat(), and everything wrapped
- * in a generic form for ease of use/change. Functions are also inlined for speed.
+ * What follows basically is the implementation of the 32-bit PCG RNG, stripped of the global
+ * rng, with the addition of the function rng32_nextFloat(). Functions are inlined for speed.
 */
 
 /*
@@ -84,9 +83,8 @@ typedef struct
 
 #define RNG32_MAX UINT_MAX
 
-static inline uint32_t rng32_nextInt(void *generic_rng32)
+static inline uint32_t rng32_nextInt(rng32 *rng)
 {
-	rng32 *rng = (rng32*) generic_rng32;
 	uint64_t oldstate = rng->state;
 	rng->state = oldstate * 6364136223846793005ULL + rng->inc;
 	uint32_t xorshifted = ((oldstate >> 18u) ^ oldstate) >> 27u;
@@ -94,9 +92,8 @@ static inline uint32_t rng32_nextInt(void *generic_rng32)
 	return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
 }
 
-__attribute__((unused)) static void rng32_init(void *generic_rng32, uint64_t seed, uint64_t stream)
+__attribute__((unused)) static void rng32_init(rng32 *rng, uint64_t seed, uint64_t stream)
 {
-	rng32 *rng = (rng32*) generic_rng32;
 	rng->state = 0U;
 	rng->inc = (stream << 1u) | 1u;
 	rng32_nextInt(rng);
@@ -104,9 +101,9 @@ __attribute__((unused)) static void rng32_init(void *generic_rng32, uint64_t see
 	rng32_nextInt(rng);
 }
 
-static inline float rng32_nextFloat(void *generic_rng32)
+static inline float rng32_nextFloat(rng32 *rng)
 {
-	return rng32_nextInt(generic_rng32) / (float) RNG32_MAX;
+	return rng32_nextInt(rng) / (float) RNG32_MAX;
 }
 
 #if __cplusplus

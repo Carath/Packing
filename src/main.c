@@ -100,9 +100,9 @@ void testOriginsLinked(rng_type *rng)
 {
 	uint64_t sum = 0; // allowing overflows
 	for (int i = 0; i < 200000000; ++i) {
-		// const int n_points = 4 + rng_int(&rng) % 9; // between 4 and 12 included.
-		const Origin o1 = {rng_int(&rng) % (N_SIDES+1) -1, rng_int(&rng) % (N_SIDES+1) -1}; // removing 1 to emulate 'NO'.
-		const Origin o2 = {rng_int(&rng) % (N_SIDES+1) -1, rng_int(&rng) % (N_SIDES+1) -1};
+		// const int n_points = 4 + rng_int(rng) % 9; // between 4 and 12 included.
+		const Origin o1 = {rng_int(rng) % (N_SIDES+1) -1, rng_int(rng) % (N_SIDES+1) -1}; // removing 1 to emulate 'NO'.
+		const Origin o2 = {rng_int(rng) % (N_SIDES+1) -1, rng_int(rng) % (N_SIDES+1) -1};
 		// Multiplier must always be != 0:
 		sum += (i+1) * originsLinked(o1, o2);
 		// sum += (i % 17 + 1) * originsLinked(o1, o2); // smaller checksums

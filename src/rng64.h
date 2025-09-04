@@ -7,15 +7,23 @@
  * - Initializing the internal state of the given rng. The 'stream' parameter
  *   is optional since several rng do not support this, and can be left to 0:
  *
- *     void rng64_init(void *generic_rng64, uint64_t seed, uint64_t stream);
+ *     void rng64_init(rng64 *rng, uint64_t seed, uint64_t stream);
  *
  * - Generating the next unsigned 64-bit integer, from the given rng:
  *
- *     uint64_t rng64_nextInt(void *generic_rng64);
+ *     uint64_t rng64_nextInt(rng64 *rng);
+ *
+ * - Generating the next unsigned 32-bit integer, from the given rng:
+ *
+ *     uint32_t rng64_nextInt32(rng64 *rng);
+ *
+ * - Generating a double uniformly between 0. and 1., from the given rng:
+ *
+ *     double rng64_nextDouble(rng64 *rng);
  *
  * - Generating a float uniformly between 0. and 1., from the given rng:
  *
- *     float rng64_nextFloat(void *generic_rng64);
+ *     float rng64_nextFloat(rng64 *rng);
  *
  * A stream, when available, is useful for producing distincts sequences of random number,
  * from the same rng and the same seed. Finally, RNG64_MAX is the maximum value that the
@@ -37,8 +45,8 @@
 */
 /* --------------------------------------------------------------------------- */
 /*
- * What follows is the Lehmer 64-bit RNG, wrapped in a generic form for ease of use/change.
- * Functions are also inlined for speed. Note that this implementation does not support streams:
+ * What follows is the Lehmer 64-bit RNG. Functions are inlined for speed.
+ * Note that this implementation does not support streams.
  */
 
 #ifndef RNG64_H
@@ -55,36 +63,34 @@ typedef __uint128_t rng64;
 
 #define RNG64_MAX ULONG_MAX
 
-static inline uint64_t rng64_nextInt(void *generic_rng64)
+static inline uint64_t rng64_nextInt(rng64 *rng)
 {
-	rng64 *rng = (rng64*) generic_rng64;
 	*rng *= 0xda942042e4dd58b5;
 	return (*rng) >> 64;
 }
 
-static inline uint32_t rng64_nextInt32(void *generic_rng64)
+static inline uint32_t rng64_nextInt32(rng64 *rng)
 {
-	return rng64_nextInt(generic_rng64) >> 32;
+	return rng64_nextInt(rng) >> 32;
 }
 
-__attribute__((unused)) static void rng64_init(void *generic_rng64, uint64_t seed, uint64_t stream)
+__attribute__((unused)) static void rng64_init(rng64 *rng, uint64_t seed, uint64_t stream)
 {
-	rng64 *rng = (rng64*) generic_rng64;
 	*rng = 1u;
 	rng64_nextInt(rng);
 	*rng = (*rng + seed) | 1u; /* must be odd */
 	rng64_nextInt(rng);
 }
 
-static inline double rng64_nextDouble(void *generic_rng64)
+static inline double rng64_nextDouble(rng64 *rng)
 {
-	return rng64_nextInt(generic_rng64) / (double) RNG64_MAX;
+	return rng64_nextInt(rng) / (double) RNG64_MAX;
 }
 
 /* Faster (but less precise) than rng64_nextDouble(): */
-static inline float rng64_nextFloat(void *generic_rng64)
+static inline float rng64_nextFloat(rng64 *rng)
 {
-	return rng64_nextInt32(generic_rng64) / (float) (RNG64_MAX >> 32);
+	return rng64_nextInt32(rng) / (float) (RNG64_MAX >> 32);
 }
 
 #if __cplusplus
